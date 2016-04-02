@@ -3,10 +3,13 @@
 fn gcd[a Int, b Int] Int {
   // ...
 }
-
 """
 
 import re
+import os.path
+import sys
+
+import xccc
 
 def compile_re(pattern):
   return re.compile(pattern, re.DOTALL|re.MULTILINE)
@@ -19,8 +22,8 @@ class Source(object):
 symbols = ('(', ')', '[', ']', '{', '}', '.', ',', ';')
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
-    'var', 'include')
-whitepsace_pattern = compile_re(r'\s*')
+    'var', 'include', 'extern')
+whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
 token_table = tuple((type_, compile_re(pattern)) for type_, pattern in
     [
@@ -54,7 +57,7 @@ def lex(source):
   s = source.data
   i = 0
   tokens = []
-  i = whitepsace_pattern.match(s).end()
+  i = whitespace_pattern.match(s).end()
   while i < len(s):
     for type_, pattern in token_table:
       m = pattern.match(s, i)
@@ -65,9 +68,13 @@ def lex(source):
     else:
       raise SyntaxError(
           "Unrecognized token %r" % err_pattern.match(s, i).group())
-    i = whitepsace_pattern.match(s, i).end()
+    i = whitespace_pattern.match(s, i).end()
   tokens.append(Token('EOF', None, i, source))
   return tokens
+
+class Program(object):
+  def __init__(self, functions):
+    self.functions = functions
 
 class TranslationUnit(object):
   def __init__(self, token, includes, functions):
@@ -101,10 +108,18 @@ class Function(object):
         self.name, ','.join(map(str, self.args)),
         self.body)
 
+  def signature(self):
+    """This is what determines whether a function is duplicated"""
+    return '%s(%s)' % (
+        self.name, ','.join(t.signature() for _, t in self.args))
+
 class Typename(object):
   def __init__(self, token, name):
     self.token = token
     self.name = name
+
+  def signaturee(self):
+    return self.name
 
   def __repr__(self):
     return 'Type%r' % self.name
@@ -289,3 +304,66 @@ def parse(source):
       raise SyntaxError('Expected expression but found %r' % peek())
 
   return parse_program()
+
+class SourceLoader(object):
+  def __init__(self, source_root):
+    self.root = source_root
+
+  def load(self, filespec):
+    # It doesn't seem very Pythonic to manually check if a file exists
+    # before trying to open it, but which exception is thrown when a file
+    # is not found seems to be platform dependent.
+    # Taking that into consideration, this seems like the better solution.
+    if os.path.isfile(filespec):
+      with open(filespec) as f:
+        return f.read()
+    elif os.path.isfile(os.path.join(self.root, filespec)):
+      with open(os.path.join(self.root, filespec)) as f:
+        return f.read()
+    else:
+      raise OSError('Source file not found %r' % filespec)
+
+class ProgramBuilder(object):
+  def __init__(self, source_loader):
+    self.loader = source_loader
+    self.functions = []
+    self.loaded = set()
+
+  def load(self, filespec):
+    if filespec in self.loaded:
+      return
+    self.loaded.add(filespec)
+    data = self.loader.load(filespec)
+    translation_unit = parse(Source(filespec, data))
+    for include in translation_unit.includes:
+      self.load(filespec)
+    for function in translation_unit.functions:
+      self.functions.append(function)
+
+  def get_program(self):
+    return Program(list(self.functions))
+
+translator_map = {
+  'cc': xccc.CcTranslator(),
+}
+
+def translate(language, source_root, main_filespec):
+  if language not in translator_map:
+    raise ValueError(
+        'language %r is not supported (must be one of {%s})' % (
+            language, ', '.join(translator_map)))
+  loader = SourceLoader(source_root)
+  builder = ProgramBuilder(loader)
+  builder.load(main_filespec)
+  program = builder.get_program()
+  translator = translator_map[language]
+  return translator.translate(program)
+
+def main():
+  if len(sys.argv) != 4:
+    print('Usage: %s <language> <source_root> <main_filespec>' % sys.argv[0])
+  else:
+    print(translate(sys.argv[1], sys.argv[2], sys.argv[3]))
+
+if __name__ == '__main__':
+  main()
