@@ -1,4 +1,7 @@
 
+fn foo[xs List(Int)] Void {
+}
+
 fn blarg[a Int, b Int] Int {
   return add[a, b];
 }
@@ -15,5 +18,6 @@ fn main[] Int {
 
   print["hello world!"];
   print[blarg[4, 5]];
+  foo[getlist[]];
   return 0;
 }

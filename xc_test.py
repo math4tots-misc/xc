@@ -1,5 +1,6 @@
 from xc.lex import lex, Source, whitespace_pattern
 from xc.parse import parse
+from xc import cc
 
 assert whitespace_pattern.match('#  ')
 s = '\n   # abc \n  xyz '
@@ -37,3 +38,14 @@ fn'gcd'[('a', Type'Int'),('b', Type'Int')]
 }""", text
 
 print('xc_test passes')
+
+t = cc.translate_type(('vector', 'int'))
+assert t == 'xc_vector<xc_int>', t
+
+t = cc.translate_type(('vector', ('vector', 'int')))
+assert t == 'xc_vector<xc_vector<xc_int>>', t
+
+t = cc.translate_type('int')
+assert t == 'xc_int', t
+
+

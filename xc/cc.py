@@ -4,11 +4,28 @@ PREFIX = r"""
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <vector>
+#include <memory>
 
 typedef long long xc_Int;
 typedef double xc_Float;
 typedef const std::string& xc_String;
 typedef void xc_Void;
+
+template <class T> struct xcc_List;
+template <class T> using xc_List = std::shared_ptr<xcc_List<T>>;
+template <class T> struct xcc_List {
+  std::vector<T> data;
+
+  xc_List<T> add(T t) {
+    data.push_back(t);
+    return xc_List<T>(this);
+  }
+};
+
+xc_List<xc_Int> xc_getlist() {
+  return xc_List<xc_Int>(new xcc_List<xc_Int>());
+}
 
 xc_Int xc_add(xc_Int a, xc_Int b) {
   return a + b;
@@ -31,46 +48,28 @@ int main() {
 """
 
 class Translator(Visitor):
-  def __init__(self):
-    self.hdr = []
-    self.src = []
-
-  def get(self):
-    hh = ''.join(''.join(h) for h in self.hdr)
-    self.hdr = [[hh]]
-    ss = ''.join(''.join(s) for s in self.src)
-    self.src = [[ss]]
-    return PREFIX + hh + ss
-
-  def make_hdr_stream(self):
-    self.hdr.append([])
-    return self.hdr[-1]
-
-  def make_src_stream(self):
-    self.src.append([])
-    return self.src[-1]
-
   def translate(self, program):
     return self.visit(program)
 
   def visitProgram(self, program):
+    hh = []
+    ss = []
     for function in program.functions:
-      self.visit(function)
-    return self.get()
+      hdr, src = self.visit(function)
+      hh.append(hdr)
+      ss.append(src)
+    return PREFIX + ''.join(hh) + ''.join(ss)
 
   def visitFunction(self, function):
-    hs = self.make_hdr_stream()
-    ss = self.make_src_stream()
     sig = '%s xc_%s(%s)' % (
         self.visit(function.return_type),
         function.name,
         ', '.join('%s xc_%s' % (self.visit(type_), name)
             for name, type_ in function.args))
-    hs.append('\n%s;' % sig)
-    ss.append('\n%s%s' % (sig, self.visit(function.body)))
+    return ('\n%s;' % sig, '\n%s%s' % (sig, self.visit(function.body)))
 
   def visitTypename(self, typename):
-    return 'xc_' + typename.name
+    return translate_type(typename.type)
 
   def visitBlockStatement(self, block):
     inside = ''.join(self.visit(statement) for statement in block.statements)
@@ -95,3 +94,9 @@ class Translator(Visitor):
 
   def visitNameExpression(self, expr):
     return 'xc_' + expr.name
+
+def translate_type(type_):
+  if isinstance(type_, str):
+    return 'xc_' + type_
+  else:
+    return 'xc_%s<%s>' % (type_[0], ','.join(map(translate_type, type_[1:])))

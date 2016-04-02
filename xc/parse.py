@@ -46,15 +46,15 @@ class Function(object):
         self.name, ','.join(t.signature() for _, t in self.args))
 
 class Typename(object):
-  def __init__(self, token, name):
+  def __init__(self, token, type_):
     self.token = token
-    self.name = name
+    self.type = type_
 
-  def signaturee(self):
-    return self.name
+  def signature(self):
+    return str(self.type)
 
   def __repr__(self):
-    return 'Type%r' % self.name
+    return 'Type%r' % self.type
 
 class BlockStatement(object):
   def __init__(self, token, statements):
@@ -182,10 +182,14 @@ def parse(source):
     return Function(tok, name, args, return_type, body)
 
   def parse_typename():
-    # TODO: Parametric types.
     tok = peek()
-    name = expect('ID').value
-    return Typename(tok, name)
+    name = type_ = expect('ID').value
+    if consume('('):
+      args = []
+      while not consume(')'):
+        args.append(parse_typename().type)
+      type_ = (name,) + tuple(args)
+    return Typename(tok, type_)
 
   def parse_block_statement():
     tok = expect('{')
