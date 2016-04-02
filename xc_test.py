@@ -1,4 +1,5 @@
-from xc import Source, lex, parse, whitespace_pattern
+from xc.lex import lex, Source, whitespace_pattern
+from xc.parse import parse
 
 assert whitespace_pattern.match('#  ')
 s = '\n   # abc \n  xyz '
