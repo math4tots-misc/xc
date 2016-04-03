@@ -74,6 +74,9 @@ TODO:
   * Better testing.
   * Better error messages.
 
+Builtin special type
+  * Void
+
 Builtin value types
   * Int
   * Float

@@ -17,6 +17,7 @@ PREFIX = r"""
 typedef long long xct_Int;
 typedef double xct_Float;
 typedef char xct_Char;
+typedef bool xct_Bool;
 typedef const std::string xct_String;
 typedef void xct_Void;
 
