@@ -28,9 +28,10 @@ class Include(object):
     return '\ninclude%r' % self.uri
 
 class Function(object):
-  def __init__(self, token, name, args, return_type, body):
+  def __init__(self, token, name, type_args, args, return_type, body):
     self.token = token
     self.name = name
+    self.type_args = type_args
     self.args = args
     self.return_type = return_type
     self.body = body
@@ -54,7 +55,7 @@ class Typename(object):
     return str(self.type)
 
   def __repr__(self):
-    return 'Type%r' % self.type
+    return 'Type' + repr(self.type)
 
 class BlockStatement(object):
   def __init__(self, token, statements):
@@ -64,6 +65,13 @@ class BlockStatement(object):
   def __repr__(self):
     return ('\n{%s\n}' % ''.join(map(str, self.statements))
         .replace('\n', '\n  '))
+
+class DeclarationStatement(object):
+  def __init__(self, token, name, type_, expression):
+    self.token = token
+    self.name = name
+    self.type = type_
+    self.expression = expression
 
 class ReturnStatement(object):
   def __init__(self, token, expression):
@@ -82,9 +90,10 @@ class ExpressionStatement(object):
     return '\n%r;' % self.expression
 
 class FunctionCallExpression(object):
-  def __init__(self, token, name, args):
+  def __init__(self, token, name, type_args, args):
     self.token = token
     self.name = name
+    self.type_args = type_args
     self.args = args
 
   def __repr__(self):
@@ -100,6 +109,14 @@ class MethodCallExpression(object):
   def __repr__(self):
     return 'CallM%r[%s: %s]' % (
         self.name, self.owner, ','.join(map(str, self.args)))
+
+class NewExpression(object):
+  def __init__(self, token, type_):
+    self.token = token
+    self.type = type_
+
+  def __repr__(self):
+    return 'New' + repr(self.type)
 
 class NameExpression(object):
   def __init__(self, token, name):
@@ -133,6 +150,14 @@ class StringExpression(object):
   def __repr__(self):
     return 'String%r' % self.value
 
+class CharExpression(object):
+  def __init__(self, token, value):
+    self.token = token
+    self.value = value
+
+  def __repr__(self):
+    return 'String%r' % self.value
+
 def parse(source):
   i = [0]
   toks = lex(source)
@@ -155,8 +180,8 @@ def parse(source):
     if at(type_):
       return gettok()
     else:
-      raise SyntaxError('Expected token of type %r but found %r' % (
-          type_, peek()))
+      raise SyntaxError('Expected token of type %r but found %r (line %d)' % (
+          type_, peek(), peek().lineno()))
 
   ############
 
@@ -182,6 +207,12 @@ def parse(source):
     tok = expect('fn')
     name = expect('ID').value
     args = []
+    type_args = None
+    if consume('('):
+      type_args = []
+      while not consume(')'):
+        type_args.append(expect('ID').value)
+        consume(',')
     expect('[')
     while not consume(']'):
       n = expect('ID').value
@@ -190,7 +221,7 @@ def parse(source):
       consume(',')
     return_type = parse_typename()
     body = parse_block_statement()
-    return Function(tok, name, args, return_type, body)
+    return Function(tok, name, type_args, args, return_type, body)
 
   def parse_typename():
     tok = peek()
@@ -217,6 +248,20 @@ def parse(source):
       expr = parse_expression()
       expect(';')
       return ReturnStatement(tok, expr)
+    elif consume('var'):
+      name = expect('ID').value
+      type_ = None
+      if not at('='):
+        type_ = parse_typename()
+      expr = None
+      if consume('='):
+        expr = parse_expression()
+      expect(';')
+      if type_ is None and expr is None:
+        raise SyntaxError(
+            'Variable declaration must specify either type or ' +
+            'expression or both')
+      return DeclarationStatement(tok, name, type_, expr)
     else:
       expr = parse_expression()
       expect(';')
@@ -241,11 +286,17 @@ def parse(source):
       expr = parse_expression()
       expect(')')
       return expr
+    elif consume('new'):
+      type_ = parse_typename()
+      return NewExpression(tok, type_)
     elif at('ID'):
       name = expect('ID').value
-      if at('['):
+      if at('(') or at('['):
+        type_args = None
+        if at('('):
+          type_args = parse_type_args()
         args = parse_args()
-        return FunctionCallExpression(tok, name, args)
+        return FunctionCallExpression(tok, name, type_args, args)
       else:
         return NameExpression(tok, name)
     elif at('INT'):
@@ -254,6 +305,8 @@ def parse(source):
       return FloatExpression(tok, float(expect('FLT').value))
     elif at('STR'):
       return StringExpression(tok, eval(expect('STR').value))
+    elif at('CHR'):
+      return CharExpression(tok, eval(expect('CHR').value))
     else:
       raise SyntaxError('Expected expression but found %r' % peek())
 
@@ -262,6 +315,14 @@ def parse(source):
     args = []
     while not consume(']'):
       args.append(parse_expression())
+      consume(',')
+    return args
+
+  def parse_type_args():
+    expect('(')
+    args = []
+    while not consume(')'):
+      args.append(parse_typename())
       consume(',')
     return args
 

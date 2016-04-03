@@ -37,8 +37,6 @@ fn'gcd'[('a', Type'Int'),('b', Type'Int')]
   Call'print'[Call'add_Int_Int'[Name'a',Int5]];
 }""", text
 
-print('xc_test passes')
-
 t = cc.translate_type(('vector', 'int'))
 assert t == 'xc_vector<xc_int>', t
 
@@ -48,4 +46,13 @@ assert t == 'xc_vector<xc_vector<xc_int>>', t
 t = cc.translate_type('int')
 assert t == 'xc_int', t
 
+t = repr(parse(Source('<test>', r"""
+fn main[] Void { new List(Int); }
+""")))
+assert t == r"""
+fn'main'[]
+{
+  NewType('List', 'Int');
+}""", t
 
+print('xc_test passes')

@@ -8,10 +8,10 @@ class Source(object):
     self.filespec = filespec
     self.data = data
 
-symbols = ('(', ')', '[', ']', '{', '}', '.', ',', ';')
+symbols = ('(', ')', '[', ']', '{', '}', '.', ',', ';', '=')
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
-    'var', 'include', 'extern')
+    'var', 'include', 'extern', 'new')
 whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
 token_table = tuple((type_, compile_re(pattern)) for type_, pattern in
@@ -19,7 +19,7 @@ token_table = tuple((type_, compile_re(pattern)) for type_, pattern in
       ('STR', r'"""(?:\\|(?!\"\"\").)*"""'),
       ('STR', r"'''(?:\\|(?!\'\'\').)*'''"),
       ('STR', r'"(?:\\|(?!\").)*"'),
-      ('STR', r"'(?:\\|(?!\').)*'"),
+      ('CHR', r"'(?:\\|(?!\').)*'"),
       ('STR', r'r""".*?"""'),
       ('STR', r"r'''.*?'''"),
       ('STR', r'r".*?"'),
@@ -41,6 +41,9 @@ class Token(object):
 
   def __repr__(self):
     return '(%s, %r)@%d' % (self.type, self.value, self.i)
+
+  def lineno(self):
+    return 1 + self.source.data.count('\n', 0, self.i)
 
 def lex(source):
   s = source.data

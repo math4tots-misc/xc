@@ -1,16 +1,25 @@
 
+fn println(T)[t T] Void {
+  print[str[t]];
+  print['\n'];
+}
+
 fn foo[xs List(Int)] Void {
-  print["inside foo"];
-  print[xs.size[]];
+  println["inside foo"];
+  println[xs.size[]];
   xs.add[5];
-  print[xs.size[]];
+  println[xs.size[]];
   xs.add[1].add[2].add[3];
-  print[xs.size[]];
-  print["About to leave foo"];
+  println[xs.size[]];
+  println["About to leave foo"];
 }
 
 fn blarg[a Int, b Int] Int {
   return add[a, b];
+}
+
+fn List(T)[] List(T) {
+  return new List(T);
 }
 
 fn bar[] Int {
@@ -19,18 +28,22 @@ fn bar[] Int {
   # var m = new Map(Int, Int).put[1, 2].put[3, 4];
   # var z = 5.5;
   # var a: Float = 5.5;
-  # print[ys.get[0]];
+  # println[ys.get[0]];
   # ys.set[0, 5];
-  # print[ys.get[0]];
+  # println[ys.get[0]];
 
-  print["hello world!"];
-  print[blarg[4, 5]];
+  println["hello world!"];
+  println[blarg[4, 5]];
   foo[getlist[]];
   return 0;
 }
 
 fn main[] Int {
   bar[];
-  print["Finished bar"];
+  println["Finished bar"];
+
+  var xs = List(Int)[];
+  println[xs.size[]];
+
   return 0;
 }

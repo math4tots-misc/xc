@@ -6,12 +6,19 @@ PREFIX = r"""
 #include <algorithm>
 #include <vector>
 #include <type_traits>
+#include <sstream>
 
-typedef long long xc_Int;
-typedef double xc_Float;
-typedef char xc_Char;
-typedef const std::string xc_String;
-typedef void xc_Void;
+// xcs_* -> xc struct type
+// xct_* -> xc type
+// xcf_* -> xc function
+// xcm_* -> xc method
+// xcv_* -> xc variable
+
+typedef long long xct_Int;
+typedef double xct_Float;
+typedef char xct_Char;
+typedef const std::string xct_String;
+typedef void xct_Void;
 
 struct Root {
   int refcnt = 0;
@@ -29,6 +36,8 @@ struct SharedPtr {
   static_assert(
       std::is_base_of<Root, T>::value,
       "Template argument to SharedPtr must be derived from struct 'Root'");
+
+  typedef T Pointee;
 
   SharedPtr(): ptr(nullptr) {}
   SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
@@ -49,40 +58,59 @@ private:
   T* ptr;
 };
 
-template <class T> struct xcc_List;
-template <class T> using xc_List = SharedPtr<xcc_List<T>>;
-template <class T> struct xcc_List: Root {
+template <class T> struct xcs_List;
+template <class T> using xct_List = SharedPtr<xcs_List<T>>;
+template <class T> struct xcs_List: Root {
   std::vector<T> data;
 
-  xc_List<T> xc_add(T t) {
+  xct_List<T> xcm_add(T t) {
     data.push_back(t);
-    return xc_List<T>(this);
+    return xct_List<T>(this);
   }
 
-  xc_Int xc_size() const {
+  xct_Int xcm_size() const {
     return data.size();
   }
 };
 
-xc_List<xc_Int> xc_getlist() {
-  return xc_List<xc_Int>(new xcc_List<xc_Int>());
+xct_List<xct_Int> xcf_getlist() {
+  return xct_List<xct_Int>(new xcs_List<xct_Int>());
 }
 
-xc_Int xc_add(xc_Int a, xc_Int b) {
+xct_Int xcf_add(xct_Int a, xct_Int b) {
   return a + b;
 }
 
-xc_Void xc_print(xc_String s) {
-  std::cout << s << std::endl;
+xct_String xcf_str(xct_String x) {
+  return x;
 }
 
-xc_Void xc_print(xc_Int x) {
-  std::cout << x << std::endl;
+xct_String xcf_str(xct_Int x) {
+  std::stringstream ss;
+  ss << x;
+  return ss.str();
 }
 
-xc_Int xc_main();
+xct_String xcf_str(xct_Float x) {
+  std::stringstream ss;
+  ss << x;
+  return ss.str();
+}
+
+xct_String xcf_str(xct_Char x) {
+  std::stringstream ss;
+  ss << x;
+  return ss.str();
+}
+
+template <class T>
+xct_Void xcf_print(T s) {
+  std::cout << xcf_str(s);
+}
+
+xct_Int xcf_main();
 int main() {
-  xc_main();
+  xcf_main();
 }
 
 ////////////////////////////////////////
@@ -96,17 +124,21 @@ class Translator(Visitor):
     hh = []
     ss = []
     for function in program.functions:
-      hdr, src = self.visit(function)
+      hdr, src = self.visitFunction(function)
       hh.append(hdr)
       ss.append(src)
     return PREFIX + ''.join(hh) + ''.join(ss)
 
   def visitFunction(self, function):
-    sig = '%s xc_%s(%s)' % (
+    sig = '%s xcf_%s(%s)' % (
         self.visit(function.return_type),
         function.name,
-        ', '.join('%s xc_%s' % (self.visit(type_), name)
+        ', '.join('%s xcv_%s' % (self.visit(type_), name)
             for name, type_ in function.args))
+    if function.type_args is not None:
+      sig = 'template <%s> %s' % (
+          ', '.join('class xct_' + t for t in function.type_args),
+          sig)
     return ('\n%s;' % sig, '\n%s%s' % (sig, self.visit(function.body)))
 
   def visitTypename(self, typename):
@@ -116,34 +148,64 @@ class Translator(Visitor):
     inside = ''.join(self.visit(statement) for statement in block.statements)
     return '\n{%s\n}' % inside.replace('\n', '\n  ')
 
-  def visitExpressionStatement(self, statement):
-    return '\n%s;' % self.visit(statement.expression)
+  def visitDeclarationStatement(self, statement):
+    if statement.type is None and statement.expression is None:
+      raise ValueError(
+          'The type and expression of a declaration statement cannot '
+          'both be None')
+    t = (
+        'auto' if statement.type is None else
+        translate_type(statement.type.type))
+    v = (
+        '' if statement.expression is None else
+        ' = ' + self.visit(statement.expression))
+    return '%s xcv_%s%s;' % (t, statement.name, v)
 
   def visitReturnStatement(self, statement):
     return '\nreturn %s;' % self.visit(statement.expression)
 
+  def visitExpressionStatement(self, statement):
+    return '\n%s;' % self.visit(statement.expression)
+
   def visitFunctionCallExpression(self, fcall):
-    return 'xc_%s(%s)' % (
+    return 'xcf_%s%s(%s)' % (
         fcall.name,
+        '' if fcall.type_args is None else (
+            '<%s>' % ', '.join(translate_type(t.type)
+            for t in fcall.type_args)),
         ', '.join(self.visit(arg) for arg in fcall.args))
 
   def visitMethodCallExpression(self, mcall):
-    return '%s->xc_%s(%s)' % (
+    return '%s->xcm_%s(%s)' % (
         self.visit(mcall.owner),
         mcall.name,
         ', '.join(self.visit(arg) for arg in mcall.args))
 
-  def visitStringExpression(self, expr):
-    return '"' + expr.value + '"'
-
-  def visitIntExpression(self, expr):
-    return str(expr.value)
+  def visitNewExpression(self, expr):
+    t = translate_type(expr.type.type)
+    return '%s(new typename %s::Pointee)' % (t, t)
 
   def visitNameExpression(self, expr):
-    return 'xc_' + expr.name
+    return 'xcv_' + expr.name
+
+  def visitStringExpression(self, expr):
+    return '"' + sanitize_string(expr.value) + '"'
+
+  def visitCharExpression(self, expr):
+    return "'" + sanitize_string(expr.value) + "'"
+
+  def visitIntExpression(self, expr):
+    return str(expr.value) + 'LL'
 
 def translate_type(type_):
   if isinstance(type_, str):
-    return 'xc_' + type_
+    return 'xct_' + type_
   else:
-    return 'xc_%s<%s>' % (type_[0], ','.join(map(translate_type, type_[1:])))
+    return 'xct_%s<%s>' % (type_[0], ','.join(map(translate_type, type_[1:])))
+
+def sanitize_string(s):
+  return (s
+      .replace('\n', '\\n')
+      .replace('\t', '\\t')
+      .replace('"', '\\"')
+      .replace("'", "\\'"))
