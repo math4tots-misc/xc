@@ -10,4 +10,14 @@ TODO:
   * borrow types
   * type analysis/annotation
 
+Builtin value types
+  * Int
+  * Float
+  * Char
+  * Byte
+  * Bool
 
+Builtin class types
+  * String
+  * List(?)
+  * Table(?, ?)

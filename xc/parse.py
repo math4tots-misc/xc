@@ -90,6 +90,17 @@ class FunctionCallExpression(object):
   def __repr__(self):
     return 'Call%r[%s]' % (self.name, ','.join(map(str, self.args)))
 
+class MethodCallExpression(object):
+  def __init__(self, token, owner, name, args):
+    self.token = token
+    self.owner = owner
+    self.name = name
+    self.args = args
+
+  def __repr__(self):
+    return 'CallM%r[%s: %s]' % (
+        self.name, self.owner, ','.join(map(str, self.args)))
+
 class NameExpression(object):
   def __init__(self, token, name):
     self.token = token
@@ -212,7 +223,17 @@ def parse(source):
       return ExpressionStatement(tok, expr)
 
   def parse_expression():
-    return parse_primary_expression()
+    return parse_postfix_expression()
+
+  def parse_postfix_expression():
+    expr = parse_primary_expression()
+    while at('.'):
+      tok = expect('.')
+      name = expect('ID').value
+      # TODO: attribute access
+      args = parse_args()
+      expr = MethodCallExpression(tok, expr, name, args)
+    return expr
 
   def parse_primary_expression():
     tok = peek()
@@ -222,11 +243,8 @@ def parse(source):
       return expr
     elif at('ID'):
       name = expect('ID').value
-      if consume('['):
-        args = []
-        while not consume(']'):
-          args.append(parse_expression())
-          consume(',')
+      if at('['):
+        args = parse_args()
         return FunctionCallExpression(tok, name, args)
       else:
         return NameExpression(tok, name)
@@ -238,5 +256,13 @@ def parse(source):
       return StringExpression(tok, eval(expect('STR').value))
     else:
       raise SyntaxError('Expected expression but found %r' % peek())
+
+  def parse_args():
+    expect('[')
+    args = []
+    while not consume(']'):
+      args.append(parse_expression())
+      consume(',')
+    return args
 
   return parse_program()

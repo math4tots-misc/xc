@@ -5,21 +5,58 @@ PREFIX = r"""
 #include <fstream>
 #include <algorithm>
 #include <vector>
-#include <memory>
 
 typedef long long xc_Int;
 typedef double xc_Float;
-typedef const std::string& xc_String;
+typedef char xc_Char;
+typedef const std::string xc_String;
 typedef void xc_Void;
 
+// 'T' must derive from 'Root'
+template <class T>
+struct SharedPtr {
+  SharedPtr(): ptr(nullptr) {}
+  SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
+  SharedPtr(const SharedPtr<T>& p): ptr(p.ptr) { ptr->increment_refcnt(); }
+  ~SharedPtr() { ptr->decrement_refcnt(); }
+  SharedPtr& operator=(const SharedPtr& p) {
+    if (ptr != p.ptr) {
+      if (ptr != nullptr)
+        ptr->decrement_refcnt();
+      ptr = p.ptr;
+      ptr->increment_refcnt();
+    }
+    return *this;
+  }
+  T* operator->() { return ptr; }
+
+private:
+  T* ptr;
+};
+
+struct Root {
+  int refcnt = 0;
+  virtual ~Root() {}
+  void increment_refcnt() { refcnt++; }
+  void decrement_refcnt() {
+    refcnt--;
+    if (refcnt <= 0)
+      delete this;
+  }
+};
+
 template <class T> struct xcc_List;
-template <class T> using xc_List = std::shared_ptr<xcc_List<T>>;
-template <class T> struct xcc_List {
+template <class T> using xc_List = SharedPtr<xcc_List<T>>;
+template <class T> struct xcc_List: Root {
   std::vector<T> data;
 
-  xc_List<T> add(T t) {
+  xc_List<T> xc_add(T t) {
     data.push_back(t);
     return xc_List<T>(this);
+  }
+
+  xc_Int xc_size() const {
+    return data.size();
   }
 };
 
@@ -85,6 +122,12 @@ class Translator(Visitor):
     return 'xc_%s(%s)' % (
         fcall.name,
         ', '.join(self.visit(arg) for arg in fcall.args))
+
+  def visitMethodCallExpression(self, mcall):
+    return '%s->xc_%s(%s)' % (
+        self.visit(mcall.owner),
+        mcall.name,
+        ', '.join(self.visit(arg) for arg in mcall.args))
 
   def visitStringExpression(self, expr):
     return '"' + expr.value + '"'
