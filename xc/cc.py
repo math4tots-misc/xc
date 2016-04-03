@@ -5,6 +5,7 @@ PREFIX = r"""
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <type_traits>
 
 typedef long long xc_Int;
 typedef double xc_Float;
@@ -12,9 +13,23 @@ typedef char xc_Char;
 typedef const std::string xc_String;
 typedef void xc_Void;
 
-// 'T' must derive from 'Root'
+struct Root {
+  int refcnt = 0;
+  virtual ~Root() {}
+  void increment_refcnt() { refcnt++; }
+  void decrement_refcnt() {
+    refcnt--;
+    if (refcnt <= 0)
+      delete this;
+  }
+};
+
 template <class T>
 struct SharedPtr {
+  static_assert(
+      std::is_base_of<Root, T>::value,
+      "Template argument to SharedPtr must be derived from struct 'Root'");
+
   SharedPtr(): ptr(nullptr) {}
   SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
   SharedPtr(const SharedPtr<T>& p): ptr(p.ptr) { ptr->increment_refcnt(); }
@@ -32,17 +47,6 @@ struct SharedPtr {
 
 private:
   T* ptr;
-};
-
-struct Root {
-  int refcnt = 0;
-  virtual ~Root() {}
-  void increment_refcnt() { refcnt++; }
-  void decrement_refcnt() {
-    refcnt--;
-    if (refcnt <= 0)
-      delete this;
-  }
 };
 
 template <class T> struct xcc_List;
