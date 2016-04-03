@@ -31,6 +31,38 @@ Thoughts:
   Also creating wrapper types around primitives might complicate matters.
   e.g. '+=' operator.
 
+Thoughts2:
+
+  Need a few things in target language to make translation easy:
+
+    1. GC or ref counting, or something that makes ref counting easy.
+      e.g. in C++, whenever a variable goes out of scope, or
+      certain interesting values change, I can react to it easily.
+
+    2. Dynamic typing, or if statically typed, operator overloading.
+      To make 'special functions' easier to implement.
+      If dynamically typed, even primitives are dynamic.
+      Not really important for core features.
+
+    3. Classes. Otherwise, you'd have to implement the class mechanism
+      yourself.
+
+    4. Some basic utility objects. E.g. lists, hashmaps, etc.
+      I'm thinking of C right now. Basically every other language I can
+      think of has that sort of thing covered.
+
+Of course, it is still difficult to map 'xc' naturally into e.g. Haskell.
+You could probably do something that naturally maps to monad
+style programming in Haskell.
+
+Implementing a 'satisfying' prime sieve in Haskell is nontrivial.
+
+If 'xc' could map naturally to Haskell, I feel like either
+  1. prime sieve would be nontrivial in 'xc', or
+  2. prime sieve would need to be part of some library implemented externally.
+
+Both of which suck. So I'm ok with poor support for Haskell backend.
+
 TODO:
   * Add a feature for doing generic programming
   * Related: List, Map, and other container types
