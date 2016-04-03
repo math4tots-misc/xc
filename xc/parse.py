@@ -70,7 +70,7 @@ class DeclarationStatement(object):
   def __init__(self, token, name, type_, expression):
     self.token = token
     self.name = name
-    self.type = type_
+    self.typename = type_
     self.expression = expression
 
 class ReturnStatement(object):
@@ -113,10 +113,10 @@ class MethodCallExpression(object):
 class NewExpression(object):
   def __init__(self, token, type_):
     self.token = token
-    self.type = type_
+    self.typename = type_
 
   def __repr__(self):
-    return 'New' + repr(self.type)
+    return 'New' + repr(self.typename)
 
 class NameExpression(object):
   def __init__(self, token, name):

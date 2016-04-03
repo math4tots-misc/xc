@@ -150,13 +150,13 @@ class Translator(Visitor):
     return '\n{%s\n}' % inside.replace('\n', '\n  ')
 
   def visitDeclarationStatement(self, statement):
-    if statement.type is None and statement.expression is None:
+    if statement.typename is None and statement.expression is None:
       raise ValueError(
           'The type and expression of a declaration statement cannot '
           'both be None')
     t = (
-        'auto' if statement.type is None else
-        translate_type(statement.type.type))
+        'auto' if statement.typename is None else
+        translate_type(statement.typename.type))
     v = (
         '' if statement.expression is None else
         ' = ' + self.visit(statement.expression))
@@ -183,7 +183,7 @@ class Translator(Visitor):
         ', '.join(self.visit(arg) for arg in mcall.args))
 
   def visitNewExpression(self, expr):
-    t = translate_type(expr.type.type)
+    t = translate_type(expr.typename.type)
     return '%s(new typename %s::Pointee)' % (t, t)
 
   def visitNameExpression(self, expr):
