@@ -15,8 +15,8 @@ assert t == (
     r'''(STR, '"""hoi there"""')@20, ''' +
     r'''(EOF, None)@46]'''), t
 
-text = repr(parse(Source('<test>', r"""include 'lib'
-include 'blarg'
+text = repr(parse(Source('<test>', r"""include "lib"
+include "blarg"
 
 fn gcd[a Int, b Int] Int {
   print[];
@@ -38,13 +38,13 @@ fn'gcd'[('a', Type'Int'),('b', Type'Int')]
 }""", text
 
 t = cc.translate_type(('vector', 'int'))
-assert t == 'xc_vector<xc_int>', t
+assert t == 'xct_vector<xct_int>', t
 
 t = cc.translate_type(('vector', ('vector', 'int')))
-assert t == 'xc_vector<xc_vector<xc_int>>', t
+assert t == 'xct_vector<xct_vector<xct_int>>', t
 
 t = cc.translate_type('int')
-assert t == 'xc_int', t
+assert t == 'xct_int', t
 
 t = repr(parse(Source('<test>', r"""
 fn main[] Void { new List(Int); }
