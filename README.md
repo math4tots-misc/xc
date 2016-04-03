@@ -18,7 +18,7 @@ Thoughts:
 
   But use of overloading must be narrow and can't be a first class feature
   in the xc language (in order to both keep my implementation simple and also
-  be easily portable to many popular langauges).
+  be easily portable to many popular languages).
 
   Idea is to hide this sort of polymorphism behind 'special' functions.
 
