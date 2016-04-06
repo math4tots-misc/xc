@@ -21,7 +21,7 @@ class Compound(Type):
     return (
         type(self) == type(other) and
         self.name == other.name and
-        self.args = other.args)
+        self.args == other.args)
 
   def __hash__(self):
     return hash((self.name, self.args))

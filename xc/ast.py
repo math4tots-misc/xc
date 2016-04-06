@@ -189,41 +189,59 @@ class Int(Expression):
   @property
   def sig(self):
     return [('value', int)]
+  type = types.Name('Int')
 
 class Float(Expression):
   @property
   def sig(self):
     return [('value', float)]
+  type = types.Name('Float')
 
 class String(Expression):
   @property
   def sig(self):
     return [('value', str)]
+  type = types.Name('String')
 
 class Name(Expression):
   @property
   def sig(self):
     return [('name', str)]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class Self(Expression):
   @property
   def sig(self):
     return []
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class ListDisplay(Expression):
   @property
   def sig(self):
     return [('items', [Expression])]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class TupleDisplay(Expression):
   @property
   def sig(self):
     return [('items', [Expression])]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class TableDisplay(Expression):
   @property
   def sig(self):
     return [('pairs', [(Expression, Expression)])]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class New(Expression):
   @property
@@ -238,6 +256,9 @@ class FunctionCall(Expression):
         ('template_args', [types.Type]),
         ('args', [Expression]),
     ]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class MethodCall(Expression):
   @property
@@ -248,6 +269,9 @@ class MethodCall(Expression):
         ('template_args', [types.Type]),
         ('args', [Expression]),
     ]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class Ternary(Expression):
   @property
@@ -257,6 +281,9 @@ class Ternary(Expression):
         ('left', Expression),
         ('right', Expression),
     ]
+  """Annotation properties:
+    * type [types.Type]
+  """
 
 class Or(Expression):
   @property
@@ -265,6 +292,7 @@ class Or(Expression):
         ('left', Expression),
         ('right', Expression),
     ]
+  type = types.Name('Bool')
 
 class And(Expression):
   @property
@@ -273,3 +301,4 @@ class And(Expression):
         ('left', Expression),
         ('right', Expression),
     ]
+  type = types.Name('Bool')

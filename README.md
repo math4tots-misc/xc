@@ -91,3 +91,11 @@ Builtin class types
   * List(?)
   * Table(?, ?)
 
+======
+
+
+Module Hierarchy
+
+  * err, types
+  * lexer(err)
+  * ast(lexer, types)
