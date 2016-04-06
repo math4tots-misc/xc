@@ -1,5 +1,7 @@
 import re
 
+from . import err
+
 def compile_re(pattern):
   return re.compile(pattern, re.DOTALL|re.MULTILINE)
 
@@ -8,7 +10,8 @@ class Source(object):
     self.filespec = filespec
     self.data = data
 
-symbols = ('(', ')', '[', ']', '{', '}', '.', ',', ';', '=')
+symbols = tuple(reversed(sorted((
+    '(', ')', '[', ']', '{', '}', '.', ',', ';', '=', '=='))))
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
     'var', 'include', 'extern', 'new')
@@ -45,9 +48,18 @@ class Token(object):
   def lineno(self):
     return 1 + self.source.data.count('\n', 0, self.i)
 
+  def colno(self):
+    return self.i - self.source.data.rfind('\n', 0, self.i)
+
+  def line(self):
+    a = self.source.data.rfind('\n', 0, self.i) + 1
+    b = self.source.data.find('\n', self.i)
+    if b == -1:
+      b = len(self.source.data)
+    return self.source.data[a:b]
+
 def lex(source):
   s = source.data
-  i = 0
   tokens = []
   i = whitespace_pattern.match(s).end()
   while i < len(s):
@@ -58,8 +70,9 @@ def lex(source):
         i = m.end()
         break
     else:
-      raise SyntaxError(
-          "Unrecognized token %r" % err_pattern.match(s, i).group())
+      raise err.Err(
+          Token('ERR', err_pattern.match(s, i).group(), i, source),
+          'Unrecognized token')
     i = whitespace_pattern.match(s, i).end()
   tokens.append(Token('EOF', None, i, source))
   return tokens
