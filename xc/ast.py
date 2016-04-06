@@ -30,19 +30,19 @@ class Ast(object):
   "special attributes: 'token' and 'sig'"
   def __init__(self, token, *args):
     sig = self.sig
-    if len(sig) != 1 + len(args):
+    if len(sig) != len(args):
       raise ValueError(
-          '%s expects %d args (including the first Token argument),' +
-          ' but got %d' % (
+          ('%s expects %d args (including the first Token argument),' +
+          ' but got %d') % (
               type(self).__name__,
-              len(sig),
-              1 + len(args) + len(kwargs)))
+              1 + len(sig),
+              1 + len(args)))
     if not isinstance(token, lexer.Token):
       raise TypeError(
           'First non-self argument to Ast.__init__' +
           'must be of a Token type')
     self.token = token
-    for i, ((name, argtype), arg) in enumerate(zip(sig, args[1:])):
+    for i, ((name, argtype), arg) in enumerate(zip(sig, args)):
       if not type_match(argtype, arg):
         raise TypeError('Expected %s for "%s" (%d) but got %r' % (
             argtype,
