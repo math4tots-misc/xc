@@ -71,7 +71,10 @@ class Ast(object):
 def clone(value):
   if isinstance(value, Ast):
     args = [getattr(value, x) for x, _ in value.sig]
-    return type(value)(value.token, *args)
+    copy = type(value)(value.token, *args)
+    for key in vars(value):
+      setattr(copy, key, getattr(value, key))
+    return copy
   elif isinstance(value, tuple):
     return tuple(map(clone, value))
   elif isinstance(value, list):

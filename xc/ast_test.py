@@ -22,6 +22,10 @@ def main(verbose=True):
   c.visit(n)
   assert c.count == 3, c.count
 
+  n = ast.clone(ast.Name(t, 'x'))
+  assert type(n) == ast.Name, type(n)
+  assert n.name == 'x', n.name
+
   if verbose:
     print('ast_test pass')
 
