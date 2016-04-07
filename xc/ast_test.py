@@ -9,7 +9,7 @@ class Counter(ast.Visitor):
     self.count += 1
     return super(Counter, self).visit(*args, **kwargs)
 
-def main(verbose=True):
+def main(verbose):
   t = lexer.lex(lexer.Source('<test>', ''))[-1]
 
   n = ast.Int(t, 5)
@@ -30,5 +30,5 @@ def main(verbose=True):
     print('ast_test pass')
 
 if __name__ == '__main__':
-  main()
+  main(1)
 

@@ -71,8 +71,8 @@ def lex(source):
         break
     else:
       raise err.Err(
-          Token('ERR', err_pattern.match(s, i).group(), i, source),
-          'Unrecognized token')
+          'Unrecognized token',
+          Token('ERR', err_pattern.match(s, i).group(), i, source))
     i = whitespace_pattern.match(s, i).end()
   tokens.append(Token('EOF', None, i, source))
   return tokens

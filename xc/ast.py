@@ -10,8 +10,11 @@ class Visitor(object):
       return self.generic_visit(node, *args, **kwargs)
 
   def generic_visit(self, node, *args, **kwargs):
+    return self.visit_children(node, *args, **kwargs)
+
+  def visit_children(self, node, *args, **kwargs):
     for child in node.children():
-      self.visit(child)
+      self.visit(child, *args, **kwargs)
 
 def type_match(type_, arg):
   if isinstance(type_, type):
@@ -88,6 +91,7 @@ class Program(Ast):
   @property
   def sig(self):
     return [
+        ('interfaces', [Interface]),
         ('classes', [Class]),
         ('functions', [Function]),
         ('declarations', [Declaration]),
@@ -98,6 +102,7 @@ class TranslationUnit(Ast):
   def sig(self):
     return [
         ('includes', [Include]),
+        ('interfaces', [Interface]),
         ('classes', [Class]),
         ('functions', [Function]),
         ('declarations', [Declaration]),
@@ -107,6 +112,16 @@ class Include(Ast):
   @property
   def sig(self):
     return [('uri', str)]
+
+class Interface(Ast):
+  @property
+  def sig(self):
+    return [
+        ('name', str),
+        ('template_args', [(str, types.Type)]),
+        ('interfaces', [types.Type]),
+        ('methods', [Function]),
+    ]
 
 class Class(Ast):
   @property
@@ -124,6 +139,7 @@ class Function(Ast):
   def sig(self):
     return [
         ('name', str),
+        ('template_args', [(str, types.Type)]),
         ('args', [(str, types.Type)]),
         ('ret', types.Type),
         ('body', Statement),
@@ -211,7 +227,7 @@ class Name(Expression):
   def sig(self):
     return [('name', str)]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class Self(Expression):
@@ -219,7 +235,7 @@ class Self(Expression):
   def sig(self):
     return []
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class ListDisplay(Expression):
@@ -227,7 +243,7 @@ class ListDisplay(Expression):
   def sig(self):
     return [('items', [Expression])]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class TupleDisplay(Expression):
@@ -235,7 +251,7 @@ class TupleDisplay(Expression):
   def sig(self):
     return [('items', [Expression])]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class TableDisplay(Expression):
@@ -243,7 +259,7 @@ class TableDisplay(Expression):
   def sig(self):
     return [('pairs', [(Expression, Expression)])]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class New(Expression):
@@ -260,7 +276,7 @@ class FunctionCall(Expression):
         ('args', [Expression]),
     ]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class MethodCall(Expression):
@@ -273,7 +289,7 @@ class MethodCall(Expression):
         ('args', [Expression]),
     ]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class Ternary(Expression):
@@ -285,7 +301,7 @@ class Ternary(Expression):
         ('right', Expression),
     ]
   """Annotation properties:
-    * type [types.Type]
+    * type: types.Type
   """
 
 class Or(Expression):
