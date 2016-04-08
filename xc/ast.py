@@ -92,6 +92,10 @@ Type = tuple
 class Expression(Ast):
   pass
 
+class Bool(Expression):
+  sig = [('value', bool)]
+  type = ('Bool',)
+
 class Char(Expression):
   sig = [('value', str)]
   type = ('Char',)
@@ -140,7 +144,11 @@ class Block(Statement):
   sig = [('stmts', [Statement])]
 
 class Declaration(Statement):
-  sig = [('name', str), ('type', object), ('expr', object)]
+  sig = [
+      ('name', str),
+      ('type', object),  # Should be 'Type', but nullable.
+      ('expr', object),  # Should be 'Expression', but nullable.
+  ]
 
 class Return(Statement):
   sig = [('expr', Expression)]

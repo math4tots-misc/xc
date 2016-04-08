@@ -156,6 +156,10 @@ def parse(source):
       return ast.String(tok, eval(expect('STR').value))
     elif at('CHR'):
       return ast.Char(tok, eval(expect('CHR').value))
+    elif consume('true'):
+      return ast.Bool(tok, True)
+    elif consume('false'):
+      return ast.Bool(tok, True)
     else:
       raise SyntaxError('Expected expression but found %r' % peek())
 
