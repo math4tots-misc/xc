@@ -1,4 +1,3 @@
-from . import types
 from . import lexer
 
 class Visitor(object):
@@ -59,7 +58,7 @@ class Ast(object):
       stack = [(value, type_)]
       while stack:
         value, type_ = stack.pop()
-        if issubclass(type_, Ast):
+        if isinstance(type_, type) and issubclass(type_, Ast):
           yield value
         elif isinstance(type_, tuple):
           for v, t in reversed(tuple(zip(value, type_))):
@@ -87,237 +86,84 @@ def clone(value):
 
 ######
 
-class Program(Ast):
-  @property
-  def sig(self):
-    return [
-        ('interfaces', [Interface]),
-        ('classes', [Class]),
-        ('functions', [Function]),
-        ('declarations', [Declaration]),
-    ]
-
-class TranslationUnit(Ast):
-  @property
-  def sig(self):
-    return [
-        ('includes', [Include]),
-        ('interfaces', [Interface]),
-        ('classes', [Class]),
-        ('functions', [Function]),
-        ('declarations', [Declaration]),
-    ]
-
-class Include(Ast):
-  @property
-  def sig(self):
-    return [('uri', str)]
-
-class Interface(Ast):
-  @property
-  def sig(self):
-    return [
-        ('name', str),
-        ('template_args', [(str, types.Type)]),
-        ('interfaces', [types.Type]),
-        ('methods', [Function]),
-    ]
-
-class Class(Ast):
-  @property
-  def sig(self):
-    return [
-        ('name', str),
-        ('template_args', [(str, types.Type)]),
-        ('interfaces', [types.Type]),
-        ('methods', [Function]),
-        ('attrs', [(str, types.Type)]),
-    ]
-
-class Function(Ast):
-  @property
-  def sig(self):
-    return [
-        ('name', str),
-        ('template_args', [(str, types.Type)]),
-        ('args', [(str, types.Type)]),
-        ('ret', types.Type),
-        ('body', Statement),
-    ]
-
-class Statement(Ast):
-  pass
-
-class Declaration(Statement):
-  @property
-  def sig(self):
-    return [
-        ('name', str),
-        ('type', types.Type),
-        ('expr', Expression),
-    ]
-
-class If(Statement):
-  @property
-  def sig(self):
-    return [
-        ('cond', Expression),
-        ('left', Statement),
-        ('right', Statement),
-    ]
-
-class While(Statement):
-  @property
-  def sig(self):
-    return [
-        ('cond', Expression),
-        ('body', Statement),
-  ]
-
-class Break(Statement):
-  @property
-  def sig(self):
-    return []
-
-class Continue(Statement):
-  @property
-  def sig(self):
-    return []
-
-class Block(Statement):
-  @property
-  def sig(self):
-    return [
-        ('stmts', [Statement]),
-    ]
-
-class Return(Statement):
-  @property
-  def sig(self):
-    return [('expr', Expression)]
-
-class ExpressionStatement(Statement):
-  @property
-  def sig(self):
-    return [('expr', Expression)]
+# 'Type' is a tuple of either 'str' or other 'Type'.
+Type = tuple
 
 class Expression(Ast):
   pass
 
+class Char(Expression):
+  sig = [('value', str)]
+  type = ('Char',)
+
 class Int(Expression):
-  @property
-  def sig(self):
-    return [('value', int)]
-  type = types.Name('Int')
+  sig = [('value', int)]
+  type = ('Int',)
 
 class Float(Expression):
-  @property
-  def sig(self):
-    return [('value', float)]
-  type = types.Name('Float')
+  sig = [('value', float)]
+  type = ('Float',)
 
 class String(Expression):
-  @property
-  def sig(self):
-    return [('value', str)]
-  type = types.Name('String')
+  sig = [('value', str)]
+  type = ('String',)
 
 class Name(Expression):
-  @property
-  def sig(self):
-    return [('name', str)]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class Self(Expression):
-  @property
-  def sig(self):
-    return []
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class ListDisplay(Expression):
-  @property
-  def sig(self):
-    return [('items', [Expression])]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class TupleDisplay(Expression):
-  @property
-  def sig(self):
-    return [('items', [Expression])]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class TableDisplay(Expression):
-  @property
-  def sig(self):
-    return [('pairs', [(Expression, Expression)])]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class New(Expression):
-  @property
-  def sig(self):
-    return [('type', types.Type)]
-
-class FunctionCall(Expression):
-  @property
-  def sig(self):
-    return [
-        ('name', str),
-        ('template_args', [types.Type]),
-        ('args', [Expression]),
-    ]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class MethodCall(Expression):
-  @property
-  def sig(self):
-    return [
-        ('owner', Expression),
-        ('name', str),
-        ('template_args', [types.Type]),
-        ('args', [Expression]),
-    ]
-  """Annotation properties:
-    * type: types.Type
-  """
-
-class Ternary(Expression):
-  @property
-  def sig(self):
-    return [
-        ('cond', Expression),
-        ('left', Expression),
-        ('right', Expression),
-    ]
-  """Annotation properties:
-    * type: types.Type
-  """
+  sig = [('name', str)]
 
 class Or(Expression):
-  @property
-  def sig(self):
-    return [
-        ('left', Expression),
-        ('right', Expression),
-    ]
-  type = types.Name('Bool')
+  sig = [('left', Expression), ('right', Expression)]
+  type = ('Bool',)
 
-class And(Expression):
-  @property
-  def sig(self):
-    return [
-        ('left', Expression),
-        ('right', Expression),
+class New(Expression):
+  sig = [('type', Type)]
+
+class FunctionCall(Expression):
+  sig = [
+      ('name', str),
+      ('typeargs', [Type]),
+      ('args', [Expression]),
+  ]
+
+class MethodCall(Expression):
+  sig = [
+      ('owner', Expression),
+      ('name', str),
+      ('typeargs', [Type]),
+      ('args', [Expression]),
+  ]
+
+class Statement(Ast):
+  pass
+
+class Block(Statement):
+  sig = [('stmts', [Statement])]
+
+class Declaration(Statement):
+  sig = [('name', str), ('type', object), ('expr', object)]
+
+class Return(Statement):
+  sig = [('expr', Expression)]
+
+class ExpressionStatement(Statement):
+  sig = [('expr', Expression)]
+
+class Function(Ast):
+  sig = [
+      ('name', str),
+      ('args', [(str, Type)]),
+      ('return_type', Type),
+      ('body', Statement),
+  ]
+
+class Include(Ast):
+  sig = [('uri', str)]
+
+class TranslationUnit(Ast):
+  sig = [
+        ('includes', [Include]),
+        ('functions', [Function]),
     ]
-  type = types.Name('Bool')
+
+class Program(Ast):
+  sig = [('functions', [Function])]
