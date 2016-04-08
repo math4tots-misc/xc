@@ -1,5 +1,11 @@
 # xc
 
+Ugh, getting static typing and generic programming right is really hard.
+
+No static typing this time.
+
+## Old stuff....
+
 python3 -m xc cc src/ main.xc > a.cc && g++ -Wall -Werror -Wpedantic --std=c++11 a.cc && ./a.out
 
 python3 -m xc cc src/ main.xc > a.cc && g++ -Wall -Werror -Wpedantic --std=c++11 a.cc && ./a.out && python3 xc_test.py
