@@ -11,7 +11,8 @@ class Source(object):
     self.data = data
 
 symbols = tuple(reversed(sorted((
-    '(', ')', '[', ']', '{', '}', '.', ',', ';', '=', '=='))))
+    '(', ')', '[', ']', '{', '}', '.', ',', ';', '=', '==',
+    '+', '-', '*', '/', '%'))))
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
     'var', 'include', 'extern', 'new', 'true', 'false')

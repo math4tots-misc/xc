@@ -4,6 +4,7 @@
 // xct_* -> xc type
 // xcf_* -> xc function
 // xcm_* -> xc method
+// xca_* -> xc attribute (member variable)
 // xcv_* -> xc variable
 #include <algorithm>
 #include <fstream>
@@ -53,6 +54,10 @@ struct SharedPtr {
   }
   T* operator->() { return ptr; }
 
+  SharedPtr<T> operator+(SharedPtr<T> other) {
+    return ptr->operator_add(other);
+  }
+
 private:
   T* ptr;
 };
@@ -63,6 +68,10 @@ struct xcs_String: Root {
   const std::string data;
   xcs_String() {}
   xcs_String(const std::string& d): data(d) {}
+
+  xct_String operator_add(xct_String other) {
+    return new xcs_String(data + other->data);
+  }
 };
 
 template <class T> struct xcs_List;
@@ -80,8 +89,24 @@ template <class T> struct xcs_List: Root {
   }
 };
 
-xct_Void xcf_print(xct_String text) {
-  std::cout << text->data << std::endl;
+template <class T>
+xct_String xcf_str(T t) {
+  return t->operator_str();
+}
+
+template <>
+xct_String xcf_str(xct_String t) {
+  return t;
+}
+
+template <>
+xct_String xcf_str(xct_Int t) {
+  return new xcs_String(std::to_string(t));
+}
+
+template <class T>
+xct_Void xcf_print(T t) {
+  std::cout << xcf_str(t)->data << std::endl;
 }
 
 xct_Void xcf_main();
@@ -91,8 +116,17 @@ int main() {
 //////////////
 //////////////
 xct_Void xcf_main();
+template <class xct_T>
+xct_Void xcf_sample(xct_T xcv_t);
 //////////////
 xct_Void xcf_main()
 {
   xcf_print(xct_String(new xcs_String("Hello world!")));
+  xcf_print(5LL + 7LL);
+  xcf_sample(1234LL - 7LL);
+}
+template <class xct_T>
+xct_Void xcf_sample(xct_T xcv_t)
+{
+  xcf_print(xct_String(new xcs_String("Hi ")) + xcf_str(xcv_t));
 }
