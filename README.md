@@ -13,8 +13,34 @@ I'll try to keep language features limited such that translating
 to Java/C#/Python/Ruby can also be done in a reasonably natural
 way. No promises though.
 
-python3 -m xc.main test.xc > test.cc && g++ --std=c++11 -Wall -Werror -Wpedantic test.cc && ./a.out
+python3 -m xc.test && python3 -m xc.main test.xc > a.cc && g++ --std=c++11 -Wall -Werror -Wpedantic a.cc && ./a.out
 
+
+## Objective
+
+Create a programming language that's pretty awesome for programming contests.
+
+That means
+  * the resulting code must run 'fast enough' as to pass even the most
+    resource intense contest challenges. (i.e. be X times less performant and
+    memory wasteful)
+  * it should be easy (and fun!) to prototype and quickly hack in.
+    This will probably imply, be relatively terse.
+
+Secondary objective: keep the language relatively simple.
+
+I picked this objective because I think I should pick a domain that I'm
+at least reasonably familiar with already so that I can test for myself
+whether my language is serving its purpose, and be able to judge reasonably
+well whether it actually is an improvement to existing solutions.
+
+Once I've satisfied the above objective to my satisfaction, I do want to
+expand to other domains, e.g. make games, make websites, mobile dev.
+
+I'm hoping that in developing my own language and by keeping it simple,
+I'll be able to transpile into other environments with minimal effort.
+
+I'll be able to keep in mind what the assumptions are about the environments.
 
 ## Builtins
 
@@ -24,14 +50,25 @@ Primitive types (Can't subclass these, C++ enforces this)
   * Int
   * Float
 
-Classes (Subclassing these is illegal, but not yet enforced)
+Classes (Subclassing these is illegal (except Object), but not yet enforced)
+  * Object (super of all classes)
+    * operator_str  # TODO
   * String
     * operator_repr
     * operator_add
+    * operator_modulo
   * List(T)
     * operator_repr
     * operator_add
+    * push
+    * pop
+    * get
+    * set
   * Map(K, V)
+    * operator_repr
+    * contains
+    * get
+    * set
 
 Functions
   * repr(T)
@@ -78,3 +115,9 @@ Functions
     Strings must be immutable, so this seems basically safe.
 
   * Implement a 'super' syntax that lets you call super methods.
+
+  * Some level of reflection e.g. Get the name of an object's type.
+
+  * Better coverage with tests.
+
+  * User defined iterable (for for loops)

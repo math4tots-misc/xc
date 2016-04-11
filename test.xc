@@ -14,6 +14,18 @@ fn main[args List(String)] {
 
   var b = new ExampleTemplateClass(Int)[]
   b.print[5]
+
+  print[$Int[1, 2, 3]]
+  print[$List(Int)[
+      $Int[1, 2, 3],
+      $Int[4, 5, 6],
+  ]]
+
+  print["Starting for loop"]
+  for x in $Int[1, 2, 3] {
+    print[x]
+  }
+  print["Ending for loop"]
 }
 
 fn sample(T)[t T] {
