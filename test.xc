@@ -1,3 +1,4 @@
+
 fn main[args List(String)] {
   print["Hello world!"]
   print["Hello world!".size[]]

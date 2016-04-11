@@ -59,6 +59,8 @@ Classes (Subclassing these is illegal (except Object), but not yet enforced)
     * operator_repr
     * operator_add
     * operator_modulo
+    * lines
+    * words
   * List(T)
     * operator_repr
     * operator_add
@@ -87,6 +89,15 @@ Functions
         Specialize for builtin types.
   * print(T)
     * default requires str(T)
+
+Non-language core stuff
+
+Classes
+  * FileReader
+    * read_line
+    * read
+  * FileWriter
+    * write
 
 ## NOTES
 

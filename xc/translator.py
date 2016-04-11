@@ -31,7 +31,7 @@ struct Root {
   virtual ~Root() {}
   void increment_refcnt() { refcnt++; }
   void decrement_refcnt() {
-    // refcnt--;
+    refcnt--;
     if (refcnt <= 0)
       delete this;
   }
