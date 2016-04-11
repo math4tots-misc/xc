@@ -42,6 +42,8 @@ I'll be able to transpile into other environments with minimal effort.
 
 I'll be able to keep in mind what the assumptions are about the environments.
 
+I think this is the language that I kinda wished Java was.
+
 ## Builtins
 
 Primitive types (Can't subclass these, C++ enforces this)
@@ -121,3 +123,5 @@ Functions
   * Better coverage with tests.
 
   * User defined iterable (for for loops)
+
+  * Consider implementing some sort of aug assignment.

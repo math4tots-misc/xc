@@ -26,6 +26,18 @@ fn main[args List(String)] {
     print[x]
   }
   print["Ending for loop"]
+
+  for x in $String["a", "bcd", "ef"] {
+    print["item: " + x]
+  }
+
+  var i = 0
+  while i < 10 {
+    print["On item " + str[i]]
+    i = i + 3
+  }
+
+  print["Final value of i = " + str[i]]
 }
 
 fn sample(T)[t T] {

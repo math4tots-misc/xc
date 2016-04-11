@@ -12,7 +12,7 @@ class Source(object):
 
 symbols = tuple(reversed(sorted((
     '(', ')', '[', ']', '{', '}', '.', ',', ';', '=', '==', ':',
-    '+', '-', '*', '/', '%', '$', '@'))))
+    '+', '-', '*', '/', '%', '$', '@', '<', '>', '<=', '>='))))
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
     'var', 'include', 'extern', 'new', 'true', 'false', 'self',

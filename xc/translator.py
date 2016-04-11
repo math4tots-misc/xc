@@ -471,7 +471,59 @@ class Translator(object):
     return '\n%s xcv_%s%s;' % (type_, name, value)
 
   def parse_expression(self):
-    return self.parse_additive_expression()
+    return self.parse_or_expression()
+
+  def parse_or_expression(self):
+    e = self.parse_and_expression()
+    while True:
+      if self.consume('and'):
+        r = self.parse_and_expression()
+        e = '%s && %s' % (e, r)
+      else:
+        break
+    return e
+
+  def parse_and_expression(self):
+    e = self.parse_equality_expression()
+    while True:
+      if self.consume('and'):
+        r = self.parse_equality_expression()
+        e = '%s && %s' % (e, r)
+      else:
+        break
+    return e
+
+  def parse_equality_expression(self):
+    e = self.parse_inequality_expression()
+    while True:
+      if self.consume('=='):
+        r = self.parse_inequality_expression()
+        e = '%s == %s' % (e, r)
+      elif self.consume('!='):
+        r = self.parse_inequality_expression()
+        e = '%s != %s' % (e, r)
+      else:
+        break
+    return e
+
+  def parse_inequality_expression(self):
+    e = self.parse_additive_expression()
+    while True:
+      if self.consume('<'):
+        r = self.parse_additive_expression()
+        e = '%s < %s' % (e, r)
+      elif self.consume('<='):
+        r = self.parse_additive_expression()
+        e = '%s <= %s' % (e, r)
+      elif self.consume('>'):
+        r = self.parse_additive_expression()
+        e = '%s > %s' % (e, r)
+      elif self.consume('>='):
+        r = self.parse_additive_expression()
+        e = '%s >= %s' % (e, r)
+      else:
+        break
+    return e
 
   def parse_additive_expression(self):
     e = self.parse_multiplicative_expression()
@@ -531,7 +583,11 @@ class Translator(object):
 
   def parse_primary_expression(self):
     token = self.peek()
-    if self.at('ID'):
+    if self.consume('('):
+      e = self.parse_expression()
+      self.expect(')')
+      return e
+    elif self.at('ID'):
       name = self.expect('ID').value
       if self.at('('):
         typeargs = self.parse_typeargs()
@@ -540,6 +596,8 @@ class Translator(object):
       elif self.at('['):
         args = self.parse_args()
         return 'xcf_%s(%s)' % (name, args)
+      elif self.consume('='):
+        return 'xcv_%s = %s' % (name, self.parse_expression())
       else:
         return 'xcv_' + name
     elif self.consume('new'):
