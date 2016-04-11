@@ -81,7 +81,12 @@ namespace std {
 
 struct xcs_String;
 using xct_String = SharedPtr<xcs_String>;
-struct xcs_String: Root {
+
+struct xcs_Object: Root {
+  // TODO: repr and str.
+};
+
+struct xcs_String: xcs_Object {
   const std::string data;
   xcs_String() {}
   xcs_String(const std::string& d): data(d) {}
@@ -98,11 +103,24 @@ struct xcs_String: Root {
     std::hash<std::string> hasher;
     return hasher(data);
   }
+
+  xct_String xcm_operator_repr() {
+    std::string s("\"");
+    for (char c: data) {
+      switch (c) {
+      case '\"': s.append("\\\"");
+      case '\n': s.append("\\n");
+      default: s.push_back(c);
+      }
+    }
+    s.push_back('\"');
+    return new xcs_String(s);
+  }
 };
 
 template <class T> struct xcs_List;
 template <class T> using xct_List = SharedPtr<xcs_List<T>>;
-template <class T> struct xcs_List: Root {
+template <class T> struct xcs_List: xcs_Object {
   std::vector<T> data;
 
   xct_List<T> xcm_add(T t) {
@@ -113,11 +131,37 @@ template <class T> struct xcs_List: Root {
   xct_Int xcm_size() const {
     return data.size();
   }
+
+  xct_Void xcm_push(T t) {
+    data.push_back(t);
+  }
+
+  T 
 };
 
 template <class T>
+xct_String xcf_repr(T t) {
+  return t->xcm_operator_repr();
+}
+
+template <>
+xct_String xcf_repr(xct_Int t) {
+  return new xcs_String(std::to_string(t));
+}
+
+template <>
+xct_String xcf_repr(xct_Float t) {
+  return new xcs_String(std::to_string(t));
+}
+
+template <>
+xct_String xcf_repr(xct_Bool t) {
+  return new xcs_String(t ? "true" : "false");
+}
+
+template <class T>
 xct_String xcf_str(T t) {
-  return t->operator_str();
+  return xcf_repr(t);
 }
 
 template <>
@@ -125,19 +169,15 @@ xct_String xcf_str(xct_String t) {
   return t;
 }
 
-template <>
-xct_String xcf_str(xct_Int t) {
-  return new xcs_String(std::to_string(t));
-}
-
 template <class T>
 xct_Void xcf_print(T t) {
   std::cout << xcf_str(t)->data << std::endl;
 }
 
-xct_Void xcf_main();
-int main() {
-  xcf_main();
+xct_Void xcf_main(xct_List<xct_String> xcv_args);
+int main(int argc, char **argv) {
+  xct_List<xct_String> args(new xcs_List<xct_String>());
+  xcf_main(args);
 }"""
 
 def translate(source):
@@ -177,23 +217,131 @@ class Translator(object):
   ##############
 
   def translate(self):
-    # a = class/type forward declarations
-    # b = declarations
-    # c = main source
-    a, b, c = self.parse_program()
-    return '\n//////////////'.join((PREFIX, a, b, c))
+    # a = forward type declarations
+    # b = type declarations
+    # c = function declarations and global variable definitions
+    # d = function and method definitions
+    a, b, c, d = self.parse_program()
+    return '\n//////////////'.join((PREFIX, a, b, c, d))
 
   def parse_program(self):
-    a = b = c = ''
+    a = b = c = d = ''
     while not self.at('EOF'):
       if self.at('fn'):
-        x, y, z = self.parse_function()
+        y, z = self.parse_function()
+        c += y
+        d += z
+      elif self.at('class'):
+        x, y, z = self.parse_class()
         a += x
         b += y
-        c += z
+        d += z
+      elif self.at('var'):
+        c += self.parse_global_declaration()
       else:
-        raise err.Err('Expected function', self.peek())
+        raise err.Err('Expected function or class', self.peek())
+    return a, b, c, d
+
+  def parse_class(self):
+    self.expect('class')
+    name = self.expect('ID').value
+    if self.at('('):
+      typeargs = self.parse_typearg_sig()
+      # TODO: Don't do this hack. Figure out a cleaner solution.
+      # TODO: Stop duplicating this evil hack.
+      typeargnames = ', '.join(
+          name for name in typeargs.replace(',', ' ').split()
+          if name != 'class')
+      a = ((
+          '\ntemplate <%s> struct xcs_%s;' +
+          '\ntemplate <%s> using xct_%s = SharedPtr<xcs_%s<%s>>;') % (
+              typeargs, name,
+              typeargs, name, name, typeargnames))
+    else:
+      typeargs = None
+      a = '\nstruct xcs_%s;\nusing xct_%s = SharedPtr<xcs_%s>;' % (
+          name, name, name)
+    if self.consume(':'):
+      base = self.parse_type() + '::Pointee'
+    else:
+      base = 'xcs_Object'
+    attrs = []
+    decls = []
+    defns = []
+    self.expect('{')
+    while not self.consume('}'):
+      if self.at('var'):
+        attrs.append(self.parse_attribute())
+      elif self.at('fn'):
+        decl, defn = self.parse_method(name, typeargs)
+        decls.append(decl)
+        defns.append(defn)
+      else:
+        raise err.Err('Expected attribute or method', self.peek())
+    if typeargs is None:
+      b = '\nstruct xcs_%s: %s\n{%s%s\n};' % (
+          name, base,
+          ''.join(attrs).replace('\n', '\n  '),
+          ''.join(decls).replace('\n', '\n  '))
+    else:
+      b = '\ntemplate <%s>\nstruct xcs_%s: %s\n{%s%s\n};' % (
+          typeargs,
+          name, base,
+          ''.join(attrs).replace('\n', '\n  '),
+          ''.join(decls).replace('\n', '\n  '))
+    c = ''.join(defns)
     return a, b, c
+
+  def parse_attribute(self):
+    self.expect('var')
+    name = self.expect('ID').value
+    type_ = self.parse_type()
+    return '\n%s xca_%s;' % (type_, name)
+
+  def parse_method(self, class_name, typeargs):
+    self.expect('fn')
+    if self.at('['):  # NOTE: constructors cannot have template args
+      return self.parse_rest_of_constructor(class_name, typeargs)
+    name = self.expect('ID').value
+    # TODO: Think about whether I want to allow template methods.
+    argsig = self.parse_arg_sig()
+    if not self.at('{'):
+      ret = self.parse_type()
+    else:
+      ret = 'xct_Void'
+    body = self.parse_block()
+
+    decl = '\n%s xcm_%s(%s);' % (ret, name, argsig)
+    if typeargs is None:
+      defn = '\n%s xcs_%s::xcm_%s(%s)%s' % (
+          ret, class_name, name, argsig, body)
+    else:
+      # TODO: Don't do this hack. Figure out a cleaner solution.
+      # TODO: Stop duplicating this evil hack.
+      typeargnames = ', '.join(
+          name for name in typeargs.replace(',', ' ').split()
+          if name != 'class')
+      defn = '\ntemplate <%s>\n%s xcs_%s<%s>::xcm_%s(%s)%s' % (
+          typeargs, ret, class_name, typeargnames, name, argsig, body)
+
+    return decl, defn
+
+  def parse_rest_of_constructor(self, class_name, typeargs):
+    argsig = self.parse_arg_sig()
+    body = self.parse_block()
+    decl = '\nxcs_%s(%s);' % (class_name, argsig)
+    if typeargs is None:
+      defn = '\nxcs_%s::xcs_%s(%s)%s' % (
+          class_name, class_name, argsig, body)
+    else:
+      # TODO: Don't do this hack. Figure out a cleaner solution.
+      # TODO: Stop duplicating this evil hack.
+      typeargnames = ', '.join(
+          name for name in typeargs.replace(',', ' ').split()
+          if name != 'class')
+      defn = '\ntemplate <%s>\nxcs_%s<%s>::xcs_%s(%s)%s' % (
+          typeargs, class_name, typeargnames, class_name, argsig, body)
+    return decl, defn
 
   def parse_function(self):
     self.expect('fn')
@@ -209,12 +357,12 @@ class Translator(object):
       sig = '%s %s(%s)' % (type_, name, args)
     else:
       sig = 'template <%s>\n%s %s(%s)' % (typeargs, type_, name, args)
-    return '', '\n%s;' % sig, '\n%s%s' % (sig, body)
+    return '\n%s;' % sig, '\n%s%s' % (sig, body)
 
   def parse_type(self):
     name = 'xct_' + self.expect('ID').value
     if self.at('('):
-      return '%s<%s>' % (name, parse_typeargs())
+      return '%s<%s>' % (name, self.parse_typeargs())
     else:
       return name
 
@@ -223,10 +371,27 @@ class Translator(object):
       return '\nbreak;'
     elif self.consume('continue'):
       return '\ncontinue;'
+    elif self.consume('return'):
+      return '\nreturn %s;' % self.parse_expression()
     elif self.at('{'):
       return self.parse_block()
+    elif self.at('var'):
+      return self.parse_declaration()
     else:
       return '\n%s;' % self.parse_expression()
+
+  def parse_declaration(self):
+    self.expect('var')
+    name = self.expect('ID').value
+    if not self.at('='):
+      type_ = self.parse_type()
+    else:
+      type_ = 'auto'
+    if self.consume('='):
+      value = ' = ' + self.parse_expression()
+    else:
+      value = ''
+    return '\n%s xcv_%s%s;' % (type_, name, value)
 
   def parse_expression(self):
     return self.parse_additive_expression()
@@ -269,17 +434,22 @@ class Translator(object):
   def parse_postfix_expression(self):
     e = self.parse_primary_expression()
     while self.at('.'):
-      token = self.expect('.')
-      name = self.expect('ID').value
-      if self.at('('):
-        typeargs = self.parse_typeargs()
-        args = self.parse_args()
-        e = '%s->xcm_%s<%s>(%s)' % (e, name, typeargs, args)
-      elif self.at('['):
-        args = self.parse_args()
-        e = '%s->xcm_%s(%s)' % (e, name, args)
+      if self.consume('.'):
+        name = self.expect('ID').value
+        if self.at('('):
+          typeargs = self.parse_typeargs()
+          args = self.parse_args()
+          e = '%s->xcm_%s<%s>(%s)' % (e, name, typeargs, args)
+        elif self.at('['):
+          args = self.parse_args()
+          e = '%s->xcm_%s(%s)' % (e, name, args)
+        elif self.consume('='):
+          v = self.parse_expression()
+          e = '%s->xca_%s = %s' % (e, name, v)
+        else:
+          e = '%s->xca_%s' % (e, name)
       else:
-        e = '%s->xca_%s' % (e, name)
+        break
     return e
 
   def parse_primary_expression(self):
@@ -295,6 +465,16 @@ class Translator(object):
         return 'xcf_%s(%s)' % (name, args)
       else:
         return 'xcv_' + name
+    elif self.consume('new'):
+      type_ = self.parse_type()
+      args = self.parse_args()
+      return '%s(new %s::Pointee(%s))' % (type_, type_, args)
+    elif self.consume('self'):
+      return 'this'
+    elif self.consume('true'):
+      return 'true'
+    elif self.consume('false'):
+      return 'false'
     elif self.at('INT'):
       return self.expect('INT').value + 'LL'
     elif self.at('FLT'):
@@ -315,6 +495,14 @@ class Translator(object):
       while self.consume(';'):
         pass
     return '\n{%s\n}' % ''.join(stmts).replace('\n', '\n  ')
+
+  def parse_fullarg_sig(self):
+    if self.at('('):
+      typeargs = self.parse_typearg_sig()
+    else:
+      typeargs = None
+    args = self.parse_arg_sig()
+    return typeargs, args
 
   def parse_arg_sig(self):
     self.expect('[')

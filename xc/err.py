@@ -15,8 +15,9 @@ class Err(Exception):
         ''.join(map(location_message, self.tokens)))
 
 def location_message(token):
-  return '\nin file "%s" on line %d:\n%s\n%s' % (
+  return '\nin file "%s" on line %d %r:\n%s\n%s' % (
       token.source.filespec,
       token.lineno(),
+      token,
       token.line(),
       (token.colno()-1) * ' ' + '*')
