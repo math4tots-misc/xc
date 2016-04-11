@@ -25,6 +25,9 @@ typedef bool xct_Bool;
 typedef char xct_Char;
 typedef long long xct_Int;
 typedef double xct_Float;
+struct Root;
+template <class T> struct SharedPtr;
+template <class T> struct IterableSharedPtr;
 
 struct Root {
   int refcnt = 0;
@@ -37,9 +40,6 @@ struct Root {
   }
 };
 
-
-template <class T> struct IterableSharedPtr;
-
 template <class T>
 struct SharedPtr {
   static_assert(
@@ -50,6 +50,11 @@ struct SharedPtr {
 
   SharedPtr(): ptr(nullptr) {}
   SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
+
+  //// TODO: Consider whether the following template constructor is
+  //// worth having.
+  // template <class K> SharedPtr(SharedPtr<K> p): SharedPtr(p->ptr) {}
+
   SharedPtr(const SharedPtr<T>& p): ptr(p.ptr) { ptr->increment_refcnt(); }
   ~SharedPtr() { ptr->decrement_refcnt(); }
   SharedPtr& operator=(const SharedPtr& p) {
@@ -240,6 +245,81 @@ template <class T>
 xct_Void xcf_print(T t) {
   std::cout << xcf_str(t)->data << std::endl;
 }
+
+///////////////////////
+
+struct xcs_Reader;
+using xct_Reader = SharedPtr<xcs_Reader>;
+struct xcs_Reader: xcs_Object {
+  virtual std::istream& ins()=0;
+  xct_String xcm_input() {  // read a line of input.
+    std::string buf;
+    std::getline(ins(), buf);
+    return new xcs_String(buf);
+  }
+};
+
+struct xcs_StdinReader;
+using xct_StdinReader = SharedPtr<xcs_StdinReader>;
+struct xcs_StdinReader: xcs_Reader {
+  std::istream& ins() {
+    return std::cin;
+  }
+};
+
+xct_StdinReader xcv_stdin(new xcs_StdinReader());
+
+struct xcs_FileReader;
+using xct_FileReader = SharedPtr<xcs_FileReader>;
+struct xcs_FileReader: xcs_Reader {
+  std::ifstream fin;
+  xcs_FileReader(xct_String path): fin(path->data) {}
+  std::istream& ins() {
+    return fin;
+  }
+  xct_String xcm_read() {  // read entire contents of file.
+    std::stringstream sstr;
+    sstr << fin.rdbuf();
+    return new xcs_String(sstr.str());
+  }
+};
+
+struct xcs_Writer;
+using xct_Writer = SharedPtr<xcs_Writer>;
+struct xcs_Writer: xcs_Object {
+  virtual std::ostream& out()=0;
+  template <class T>
+  xct_Void xcm_write(T t) {
+    out() << xcf_str(t)->data;
+  }
+  template <class T>
+  xct_Void xcm_print(T t) {
+    xcm_write(t);
+    out() << std::endl;
+  }
+};
+
+struct xcs_FileWriter;
+using xct_FileWriter = SharedPtr<xcs_FileWriter>;
+struct xcs_FileWriter: xcs_Writer {
+  std::ofstream fout;
+  xcs_FileWriter(xct_String path): fout(path->data) {}
+  std::ostream& out() {
+    return fout;
+  }
+};
+
+struct xcs_StdoutWriter;
+using xct_StdoutWriter = SharedPtr<xcs_StdoutWriter>;
+struct xcs_StdoutWriter: xcs_Writer {
+  std::ostream& out() {
+    return std::cout;
+  }
+};
+
+xct_StdoutWriter xcv_stdout(new xcs_StdoutWriter);
+
+///////////////////////
 
 xct_Void xcf_main(xct_List<xct_String> xcv_args);
 int main(int argc, char **argv) {

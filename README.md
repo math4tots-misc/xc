@@ -93,11 +93,16 @@ Functions
 Non-language core stuff
 
 Classes
-  * FileReader
-    * read_line
-    * read
-  * FileWriter
+  * Reader
+    * input - read a line of input
+  * StdinReader: Reader
+  * FileReader: Reader
+    * read - read entire file.
+  * Writer
     * write
+    * print
+  * FileWriter: Writer
+  * StdoutWriter: Writer
 
 ## NOTES
 
