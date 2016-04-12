@@ -318,7 +318,7 @@ xct_StdoutWriter xcv_stdout(new xcs_StdoutWriter);
 ///////////////////////
 
 // Code for manual stack trace.
-// This code is only used if the option is turned on.
+// This code is only used if the 'trace' option is turned on.
 // when turned on, a Frame object is inserted into every function body.
 // Also, note, this is kind of a fragile approach. Coroutines, asynchronous
 // code could potentially mess this all up.
@@ -332,12 +332,16 @@ struct Frame {
     trace.pop_back();
   }
 };
-void print_trace() {
+std::string make_trace_message() {
+  std::stringstream ss;
   for (auto message: trace) {
-    std::cout << "  *** " << message << std::endl;
+    ss << "  *** " << message << std::endl;
   }
+  return ss.str();
 }
-
+void print_trace() {
+  std::cout << make_trace_message();
+}
 xct_Void xcf_assert(xct_Bool cond, xct_String message) {
   if (!cond) {
     std::cout << "--------------------" << std::endl;
@@ -345,6 +349,9 @@ xct_Void xcf_assert(xct_Bool cond, xct_String message) {
     print_trace();
     exit(1);
   }
+}
+xct_String xcf_trace() {
+  return new xcs_String(make_trace_message());
 }
 
 ///////////////////////
@@ -418,6 +425,9 @@ class Translator(object):
         c += self.parse_global_declaration()
       elif self.at('include'):
         a += self.parse_include() + a
+      elif self.consume('STR') or self.consume('CHR'):
+        # TODO: Consider inserting these comments into generated source.
+        pass  # string or char style comments
       else:
         raise err.Err('Expected function or class', self.peek())
     # a = includes and forward type declarations
