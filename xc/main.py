@@ -11,7 +11,10 @@ def main(filespec, outfilespec=None):
   with open(filespec) as f:
     data = f.read()
   source = lexer.Source(filespec, data)
-  tr = translator.Translator(loader.Loader(DEFAULT_LOADER_PATH), source)
+  tr = translator.Translator(
+      source,
+      loader=loader.Loader(DEFAULT_LOADER_PATH),
+      trace=True)
   tr.additional_includes.extend(['core/prelude.xc'])
   result = tr.translate()
   if outfilespec is None:

@@ -141,3 +141,10 @@ Classes
   * User defined iterable (for for loops)
 
   * Consider implementing some sort of aug assignment.
+
+  * Seriously, clean up all the code debt I've been racking up...
+
+  * Add line numbers to stack trace (i.e. line numbers of where
+    functions are invoked).
+
+  * Would be nice to print stack trace on segfault.
