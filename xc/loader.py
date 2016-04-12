@@ -2,6 +2,7 @@ import os
 
 from . import err
 
+# TODO: In the future, include from e.g. repositories on github.
 class Loader(object):
 
   def __init__(self, root):
