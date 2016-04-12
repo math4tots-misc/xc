@@ -1,13 +1,19 @@
+import os
 import sys
 
+from . import loader
 from . import lexer
 from . import translator
+
+DEFAULT_LOADER_PATH = os.path.expanduser('~/dev/git/xc/src')
 
 def main(filespec, outfilespec=None):
   with open(filespec) as f:
     data = f.read()
   source = lexer.Source(filespec, data)
-  result = translator.translate(source)
+  tr = translator.Translator(loader.Loader(DEFAULT_LOADER_PATH), source)
+  tr.additional_includes.extend(['core/prelude.xc'])
+  result = tr.translate()
   if outfilespec is None:
     print(result)
   else:

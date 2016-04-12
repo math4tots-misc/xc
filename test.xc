@@ -8,4 +8,6 @@ fn main[args List(String)] {
 
   var fout = new FileWriter["sample.txt"]
   fout.print["This is some sample text!"]
+
+  print["This is using print function, not the method"]
 }

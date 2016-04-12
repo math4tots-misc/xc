@@ -241,11 +241,6 @@ xct_String xcf_str(xct_String t) {
   return t;
 }
 
-template <class T>
-xct_Void xcf_print(T t) {
-  std::cout << xcf_str(t)->data << std::endl;
-}
-
 ///////////////////////
 
 struct xcs_Reader;
@@ -327,16 +322,19 @@ int main(int argc, char **argv) {
   xcf_main(args);
 }"""
 
-def translate(source):
-  return Translator(source).translate()
+def translate(loader, source):
+  return Translator(loader, source).translate()
 
 
 class Translator(object):
 
-  def __init__(self, source):
+  def __init__(self, loader, source, included=None):
+    self.loader = loader
     self.source = source
     self.tokens = lexer.lex(source)
     self.i = 0
+    self.additional_includes = []
+    self.included = included or set()
 
   def peek(self):
     return self.tokens[self.i]
@@ -364,15 +362,15 @@ class Translator(object):
   ##############
 
   def translate(self):
-    # a = forward type declarations
-    # b = type declarations
-    # c = function declarations and global variable definitions
-    # d = function and method definitions
-    a, b, c, d = self.parse_program()
-    return '\n//////////////'.join((PREFIX, a, b, c, d))
+    return '\n//////////////'.join((PREFIX, self.translate_without_prefix()))
+
+  def translate_without_prefix(self):
+    return '\n'.join(self.parse_program())
 
   def parse_program(self):
     a = b = c = d = ''
+    for inc in self.additional_includes:
+      a += self.process_include(inc)
     while not self.at('EOF'):
       if self.at('fn'):
         y, z = self.parse_function()
@@ -385,9 +383,27 @@ class Translator(object):
         d += z
       elif self.at('var'):
         c += self.parse_global_declaration()
+      elif self.at('include'):
+        a += self.parse_include() + a
       else:
         raise err.Err('Expected function or class', self.peek())
+    # a = includes and forward type declarations
+    # b = type declarations
+    # c = function declarations and global variable definitions
+    # d = function and method definitions
     return a, b, c, d
+
+  def parse_include(self):
+    self.expect('include')
+    uri = eval((self.consume('STR') or self.consume('CHR').value))
+    return self.process_include(uri)
+
+  def process_include(self, uri):
+    data = self.loader.load(uri)
+    source = lexer.Source(uri, data)
+    self.included.add(uri)
+    return (Translator(self.loader, source, self.included)
+        .translate_without_prefix())
 
   def parse_class(self):
     self.expect('class')
