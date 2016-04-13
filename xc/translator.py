@@ -578,7 +578,7 @@ class Translator(object):
           body, self.source.filespec, '%s.%s' % (class_name, name),
           token.lineno())
 
-    decl = '\n%s xcm_%s(%s);' % (ret, name, argsig)
+    decl = '\nvirtual %s xcm_%s(%s);' % (ret, name, argsig)
     if typeargs is None:
       defn = '\n%s xcs_%s::xcm_%s(%s)%s' % (
           ret, class_name, name, argsig, body)

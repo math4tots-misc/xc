@@ -13,7 +13,7 @@ I'll try to keep language features limited such that translating
 to Java/C#/Python/Ruby can also be done in a reasonably natural
 way. No promises though.
 
-    xc oldtest.xc && ./a.out && xc oldtest2.xc && ./a.out; ./test
+    ./test && xc oldtest.xc && ./a.out && xc oldtest2.xc && ./a.out
 
     python3 -m xc.test && python3 -m xc.main test.xc > a.cc && \
         g++ --std=c++11 -Wall -Werror -Wpedantic a.cc && ./a.out
