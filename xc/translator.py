@@ -356,11 +356,14 @@ xct_String xcf_trace() {
 
 ///////////////////////
 
+// TODO: Hmm. Is using a global var the best way to do this?
+xct_List<xct_String> xcv_ARGS(new xcs_List<xct_String>());
+
 xct_Void xcf_main();
 int main(int argc, char **argv) {
-  // TODO: Create 'args'. But don't pass to main. Cuz that sucks.
-  // TODO: Figure out what to do with args.
-  // xct_List<xct_String> args(new xcs_List<xct_String>());
+  for (int i = 0; i < argc; i++) {
+    xcv_ARGS->xcm_push(new xcs_String(argv[i]));
+  }
   xcf_main();
 }"""
 
