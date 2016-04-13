@@ -5,7 +5,9 @@ from . import loader
 from . import lexer
 from . import translator
 
-DEFAULT_LOADER_PATH = os.path.expanduser('~/dev/git/xc/src')
+PYTHON_SRC_ROOT = os.path.realpath(os.path.join(__file__, os.pardir))
+ROOT = os.path.realpath(os.path.join(PYTHON_SRC_ROOT, os.pardir))
+XC_SRC_ROOT = os.path.join(ROOT, 'xcsrc')
 
 def main(filespec, outfilespec=None):
   with open(filespec) as f:
@@ -13,7 +15,7 @@ def main(filespec, outfilespec=None):
   source = lexer.Source(filespec, data)
   tr = translator.Translator(
       source,
-      loader=loader.Loader(DEFAULT_LOADER_PATH),
+      loader=loader.Loader(XC_SRC_ROOT),
       trace=True)
   tr.additional_includes.extend(['core/prelude.xc'])
   result = tr.translate()

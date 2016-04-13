@@ -1,0 +1,9 @@
+#!/bin/bash
+if [ "$#" -lt 1 ]; then
+  echo "Usage: xc <source.xc> [compiler options...]"
+  exit 1
+fi
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+export PYTHONPATH="$PYTHONPATH":"$ROOT"
+python3 -m xc.main "$1" > "$ROOT"/a.cc && \
+    g++ --std=c++11 -Wall -Werror -Wpedantic "$ROOT"/a.cc "${@:2}"

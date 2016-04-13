@@ -356,10 +356,12 @@ xct_String xcf_trace() {
 
 ///////////////////////
 
-xct_Void xcf_main(xct_List<xct_String> xcv_args);
+xct_Void xcf_main();
 int main(int argc, char **argv) {
-  xct_List<xct_String> args(new xcs_List<xct_String>());
-  xcf_main(args);
+  // TODO: Create 'args'. But don't pass to main. Cuz that sucks.
+  // TODO: Figure out what to do with args.
+  // xct_List<xct_String> args(new xcs_List<xct_String>());
+  xcf_main();
 }"""
 
 def translate(source, loader=None, trace=False):

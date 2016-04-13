@@ -13,8 +13,28 @@ I'll try to keep language features limited such that translating
 to Java/C#/Python/Ruby can also be done in a reasonably natural
 way. No promises though.
 
-python3 -m xc.test && python3 -m xc.main test.xc > a.cc && g++ --std=c++11 -Wall -Werror -Wpedantic a.cc && ./a.out
+    python3 -m xc.test && python3 -m xc.main test.xc > a.cc && \
+        g++ --std=c++11 -Wall -Werror -Wpedantic a.cc && ./a.out
 
+## Setup
+
+Dependencies:
+  * Python3 (Python2 is probably ok to, but then 'bin/xc' should be modified)
+  * g++ (probably clang is ok too if 'g++' is aliased to it)
+
+Add the 'bin' directory to path.
+
+You must pass exactly 1 filename to 'xc', and rest of the arguments are
+passed to g++ as options.
+
+Usage:
+
+  xc test.xc -o test
+
+Will create a 'test' executable.
+
+All library code (i.e. stuff pulled in through 'include') should be in
+'xcsrc' directory.
 
 ## Objective
 
@@ -148,3 +168,10 @@ Classes
     functions are invoked).
 
   * Would be nice to print stack trace on segfault.
+
+  * Allow 'include' directives to refer to multiple source roots as well
+    as from remote git repositories.
+
+  * Use a proper temporary file instead of "$ROOT"/a.cc
+
+  * Consider Windows support.
