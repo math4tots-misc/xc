@@ -92,6 +92,14 @@ struct SharedPtr {
     return ptr->xcm_oiperator_less_than(p);
   }
 
+  xct_Bool is(SharedPtr<T> p) const {
+    return ptr == p.ptr;
+  }
+
+  xct_Bool is_not(SharedPtr<T> p) const {
+    return ptr != p.ptr;
+  }
+
 protected:
   T* ptr;
 };
@@ -244,7 +252,8 @@ xct_String xcf_repr(T t) {
 
 template <>
 xct_String xcf_repr(xct_Char t) {
-  std::stringstream ss("c'");
+  std::stringstream ss;
+  ss << "c'";
   switch (t) {
   case '\n': ss << "\n";
   case '\t': ss << "\t";
@@ -290,6 +299,18 @@ xct_String xcf_str(xct_Char t) {
 template <>
 xct_String xcf_str(xct_String t) {
   return t;
+}
+
+xct_Int xcf_int(xct_String s, xct_Int base) {
+  return stoll(s->data, 0, base);
+}
+
+xct_Int xcf_int(xct_String s) {
+  return stoll(s->data, 0, 10);
+}
+
+xct_Float xcf_float(xct_String s) {
+  return stod(s->data);
 }
 
 ///////////////////////
@@ -399,6 +420,10 @@ xct_Void xcf_assert(xct_Bool cond, xct_String message) {
     print_trace();
     exit(1);
   }
+}
+xct_String assert_message(new xcs_String("assertion failed"));
+xct_Void xcf_assert(xct_Bool cond) {
+  xcf_assert(cond, assert_message);
 }
 xct_String xcf_trace() {
   return new xcs_String(make_trace_message());
@@ -690,9 +715,9 @@ class Translator(object):
   def parse_or_expression(self):
     e = self.parse_and_expression()
     while True:
-      if self.consume('and'):
+      if self.consume('or'):
         r = self.parse_and_expression()
-        e = '%s && %s' % (e, r)
+        e = '%s || %s' % (e, r)
       else:
         break
     return e
@@ -716,6 +741,13 @@ class Translator(object):
       elif self.consume('!='):
         r = self.parse_inequality_expression()
         e = '%s != %s' % (e, r)
+      elif self.consume('is'):
+        if self.consume('not'):
+          r = self.parse_inequality_expression()
+          e = '%s.is_not(%s)' % (e, r)
+        else:
+          r = self.parse_inequality_expression()
+          e = '%s.is(%s)' % (e, r)
       else:
         break
     return e
@@ -769,8 +801,10 @@ class Translator(object):
     return e
 
   def parse_prefix_expression(self):
-    if self.at('-'):
+    if self.consume('-'):
       return '-' + self.parse_postfix_expression()
+    elif self.consume('not'):
+      return '!' + self.parse_postfix_expression()
     else:
       return self.parse_postfix_expression()
 
@@ -800,7 +834,7 @@ class Translator(object):
     if self.consume('('):
       e = self.parse_expression()
       self.expect(')')
-      return e
+      return '(%s)' % e
     elif self.at('ID'):
       name = self.expect('ID').value
       if self.at('('):
