@@ -1,0 +1,4 @@
+#!/bin/bash
+for t in tests/*.xc; do
+  xc $t && ./a.out
+done

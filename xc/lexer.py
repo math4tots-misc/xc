@@ -29,6 +29,7 @@ token_table = tuple((type_, compile_re(pattern)) for type_, pattern in
       ('STR', r"r'''.*?'''"),
       ('STR', r'r".*?"'),
       ('STR', r"r'.*?'"),
+      ('CHR', r"c'(?:\\|(?!\').)*'"),
       ('FLT', r'\d+\.\d*'),
       ('FLT', r'\d*\.\d+'),
       ('INT', r'\d+'),

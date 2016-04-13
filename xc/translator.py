@@ -79,6 +79,19 @@ struct SharedPtr {
 
   IterableSharedPtr<T> iterptr() const;
 
+  // TODO: Understand how this works even when 'T' is a type that does
+  // not implement 'xcm_operator_equals'.
+  // An alternative solution would be to have an 'equals' template function
+  // that always directly calls 'xcm_operator_equals' on SharedPtr<T>,
+  // and specialize for builtin types.
+  xct_Bool operator==(SharedPtr<T> p) const {
+    return ptr->xcm_operator_equals(p);
+  }
+
+  xct_Bool operator<(SharedPtr<T> p) const {
+    return ptr->xcm_oiperator_less_than(p);
+  }
+
 protected:
   T* ptr;
 };
@@ -162,6 +175,10 @@ struct xcs_String: xcs_Object {
     s.push_back('\"');
     return new xcs_String(s);
   }
+
+  xct_Bool xcm_operator_equals(xct_String s) {
+    return data == s->data;
+  }
 };
 
 template <class T> struct xcs_List: xcs_Object {
@@ -188,6 +205,14 @@ template <class T> struct xcs_List: xcs_Object {
     T d = data.back();
     data.pop_back();
     return d;
+  }
+
+  T xcm_get(xct_Int i) {
+    return data[i];
+  }
+
+  xct_Void xcm_set(xct_Int i, T t) {
+    data[i] = t;
   }
 
   xct_String xcm_operator_repr() {
@@ -218,6 +243,19 @@ xct_String xcf_repr(T t) {
 }
 
 template <>
+xct_String xcf_repr(xct_Char t) {
+  std::stringstream ss("c'");
+  switch (t) {
+  case '\n': ss << "\n";
+  case '\t': ss << "\t";
+  case '\"': ss << "\"";
+  default: ss << t;
+  }
+  ss << "'";
+  return new xcs_String(ss.str());
+}
+
+template <>
 xct_String xcf_repr(xct_Int t) {
   return new xcs_String(std::to_string(t));
 }
@@ -232,9 +270,21 @@ xct_String xcf_repr(xct_Bool t) {
   return new xcs_String(t ? "true" : "false");
 }
 
+// TODO: The default impl of 'str' should call method 'operator_str'.
+// And every value type should have a template specialization.
+// All value type specialization besides 'Char' should just
+// redirect to 'repr'. Also, template specialization for 'String'
+// should no longer be needed.
 template <class T>
 xct_String xcf_str(T t) {
   return xcf_repr(t);
+}
+
+template <>
+xct_String xcf_str(xct_Char t) {
+  std::stringstream ss;
+  ss << t;
+  return new xcs_String(ss.str());
 }
 
 template <>
@@ -779,7 +829,7 @@ class Translator(object):
     elif self.at('FLT'):
       return self.expect('FLT').value
     elif self.at('CHR'):
-      return "'%s'" % sanitize_string(eval(self.expect('CHR').value))
+      return "'%s'" % sanitize_string(eval(self.expect('CHR').value[1:]))
     elif self.at('STR'):
       return 'xct_String(new xcs_String("%s"))' % (
           sanitize_string(eval(self.expect('STR').value)),)
