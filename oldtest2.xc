@@ -23,7 +23,7 @@ This is using print function, not the method
 
 """
 
-fn main[args List(String)] {
+fn main[] {
   stdout.print["printing with stdout!!!"]
   stdout.write["writing with stdout --- "]
   stdout.print["again using stdout"]

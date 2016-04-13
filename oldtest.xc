@@ -1,5 +1,5 @@
 
-fn main[args List(String)] {
+fn main[] {
   print["Hello world!"]
   print["Hello world!".size[]]
   print[5 + 18]
