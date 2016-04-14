@@ -37,13 +37,37 @@ fn main[] {
 
   assert[$String["4", "5", "75"].map[int] == $Int[4, 5, 75]]
 
-  print[$String["5", "6"].map[int]]
-
   # .map[fn[i Int] Float {
   #   return i + 7
   # }]
 
+  var z String
+  var a String
+  assert[z is nil]
+  assert[not (z is not nil)]
+  z = 'hi'
+  assert[z is not nil]
+  assert[not (z is nil)]
+  assert['hi' == z]
+  z = nil
+  assert[z is nil]
+  assert[not (z is not nil)]
+
+  var ec = new ExampleClass[]
+  assert[ec.attr is nil]
+  ec.attr = 'hello'
+  assert[ec.attr is not nil]
+  assert[ec.attr == 'hello']
+  ec.attr = nil
+  assert[ec.attr is nil]
+
+  assert['hello'.size[] == 5]
+  assert[$String['a', 'b', 'c'].size[] == 3]
+  assert[$Int[45, 64].size[] == 2]
+
   print['basic_test pass']
 }
 
-class ExampleClass {}
+class ExampleClass {
+  var attr String
+}

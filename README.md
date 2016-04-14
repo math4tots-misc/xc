@@ -147,6 +147,12 @@ Classes
     it's not subclassable, since constructor initializer lists are not
     supported.
 
+  * 'nil' is kind of a pseudo-concept.
+    You can test for nil with 'is nil'/'is not nil', and
+    uninitialized pointer variables start out as nil.
+    But all the above are special syntactic rules.
+    'nil' is not a true expression.
+
 ## TODO
 
   * Right now, new string objects are created every time a string literal is
