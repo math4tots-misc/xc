@@ -163,6 +163,14 @@ Classes
 
 ## TODO
 
+  * Prioritize these TODOs.
+
+  * Right now, the C++ compiler is responsible for catching many of the
+    static errors.
+    It's going to take a lot more work, since right now the transpiler
+    is pretty dumb, but eventually I want to catch all compile time
+    errors at transpile time.
+
   * Right now, new string objects are created every time a string literal is
     referenced. If it becomes an issue, might be worth allocating string
     literals in global scope and just reusing them.
