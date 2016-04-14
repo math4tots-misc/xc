@@ -1,5 +1,3 @@
-# TODO: Once user defined iterators are possible,
-# make this class iterable.
 class Set(T) {
   var data Map(T, Bool)
 
