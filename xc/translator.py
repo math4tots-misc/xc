@@ -105,7 +105,7 @@ struct SharedPtr {
   }
 
   xct_Bool operator<(SharedPtr<T> p) const {
-    return ptr->xcmoperator_less_than(p);
+    return ptr->xcm_lt_(p);
   }
 
   xct_Bool is(SharedPtr<T> p) const {
@@ -155,15 +155,47 @@ private:
 // that would cause compile errors when trying to use the pointer for
 // non-iterable objects.
 template <class T>
-struct IterableSharedPtr: public SharedPtr<T> {
-  IterableSharedPtr(T* p): SharedPtr<T>(p) {}
-
-  decltype(std::declval<T>().begin()) begin() {
-    return SharedPtr<T>::ptr->begin();
+struct IterableSharedPtr: SharedPtr<T> {
+  using I = decltype(std::declval<T>().xcm_iter_());
+  using V = decltype(std::declval<T>().xcm_iter_()->xcmnext());
+  bool more;
+  I iter;
+  V item;
+  IterableSharedPtr(T* p):
+      SharedPtr<T>(p),
+      iter(p->xcm_iter_()) {
+    if (iter->xcmmore()) {
+      more = true;
+      item = iter->xcmnext();
+    } else {
+      more = false;
+    }
   }
 
-  decltype(std::declval<T>().end()) end() {
-    return SharedPtr<T>::ptr->end();
+  IterableSharedPtr& begin() {
+    return *this;
+  }
+
+  IterableSharedPtr& end() {
+    return *this;
+  }
+
+  IterableSharedPtr& operator++() {
+    if (iter->xcmmore()) {
+      more = true;
+      item = iter->xcmnext();
+    } else {
+      more = false;
+    }
+    return *this;
+  }
+
+  V operator*() {
+    return item;
+  }
+
+  bool operator!=(const IterableSharedPtr& p) const {
+    return more;
   }
 };
 
@@ -231,8 +263,24 @@ struct xcs_String: xcs_Object {
     return data == s->data;
   }
 
-  xct_Bool xcmoperator_less_than(xct_String s) {
+  xct_Bool xcm_lt_(xct_String s) {
     return data < s->data;
+  }
+};
+
+template <class T> struct xcs_ListIterator;
+template <class T> using xct_ListIterator = SharedPtr<xcs_ListIterator<T>>;
+template <class T> struct xcs_ListIterator: xcs_Object {
+  xct_List<T> owner;
+  typename std::vector<T>::iterator iter;
+  xcs_ListIterator(xct_List<T> xs): owner(xs), iter(xs->data.begin()) {}
+  xct_Bool xcmmore() {
+    return iter != owner->data.end();
+  }
+  T xcmnext() {
+    T t = *iter;
+    ++iter;
+    return t;
   }
 };
 
@@ -310,8 +358,29 @@ template <class T> struct xcs_List: xcs_Object {
     return this;
   }
 
-  xct_Bool xcmoperator_less_than(xct_List<T> s) {
+  xct_Bool xcm_lt_(xct_List<T> s) {
     return data < s->data;
+  }
+
+  xct_ListIterator<T> xcm_iter_() {
+    return new xcs_ListIterator<T>(this);
+  }
+};
+
+template <class K, class V> struct xcs_MapIterator;
+template <class K, class V> using xct_MapIterator =
+    SharedPtr<xcs_MapIterator<K,V>>;
+template <class K, class V> struct xcs_MapIterator: xcs_Object {
+  xct_Map<K,V> owner;
+  typename std::unordered_map<K,V>::iterator iter;
+  xcs_MapIterator(xct_Map<K,V> xs): owner(xs), iter(xs->data.begin()) {}
+  xct_Bool xcmmore() {
+    return iter != owner->data.end();
+  }
+  K xcmnext() {
+    K t = iter->first;
+    ++iter;
+    return t;
   }
 };
 
@@ -355,8 +424,9 @@ template <class K, class V> struct xcs_Map: xcs_Object {
     return it->second;
   }
 
-  xct_Void xcmset(K key, V value) {
+  xct_Map<K,V> xcmset(K key, V value) {
     data[key] = value;
+    return this;
   }
 
   xct_Bool xcmhas(K key) {
@@ -372,6 +442,13 @@ template <class K, class V> struct xcs_Map: xcs_Object {
     return false;
   }
 
+  xct_MapIterator<K,V> xcm_iter_() {
+    return new xcs_MapIterator<K,V>(this);
+  }
+
+  xct_Bool xcm_eq_(xct_Map<K,V> m) {
+    return data == m->data;
+  }
 };
 
 template <class T>

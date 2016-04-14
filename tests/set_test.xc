@@ -6,5 +6,5 @@ fn main[] {
   assert[s.has['hi']]
   s.add['a']
   assert[s.list[].sort[] == $String['a', 'hi']]
-  print['core_set_test pass']
+  print['set_test pass']
 }

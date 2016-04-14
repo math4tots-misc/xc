@@ -201,3 +201,5 @@ Classes
     double underscore names are technically reserved for C++ implementation.
 
   * Allow template constructors
+
+  * Consider including 'decltype' in the language.

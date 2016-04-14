@@ -94,7 +94,7 @@ fn main[] {
     assert[keys == $String['a', 'b'], repr[keys]]
   }
 
-  print['basic_test pass']
+  print['prelude_test pass']
 }
 
 class ExampleClass {

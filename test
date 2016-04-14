@@ -1,4 +1,4 @@
 #!/bin/bash
 for t in tests/*.xc; do
-  xc $t -o a.out && ./a.out
+  xc $t -o a.out && ./a.out || exit 1
 done

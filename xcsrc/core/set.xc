@@ -22,8 +22,9 @@ class Set(T) {
     return ks
   }
 
-  fn add[t T] {
+  fn add[t T] Set(T) {
     self.data.set[t, true]
+    return self
   }
 
   # Returns 'true' if the item was found and removed from the set.
@@ -39,5 +40,11 @@ class Set(T) {
 
   fn size[] Int {
     return self.data.size[]
+  }
+
+  # TODO: Figure out how to resolve this without having to explicitly
+  # knowing the type of 'self.data._iter_[]'
+  fn _iter_[] MapIterator(T, Bool) {
+    return self.data._iter_[]
   }
 }
