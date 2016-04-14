@@ -47,7 +47,7 @@ fn main[] {
   assert[$Int[5, 6, 7].map[f] == $Int[67, 89, 115]]
 
   var g = int
-  print[$String["5", "6", "7"].map[g] == $Int[5, 6, 7]]
+  assert[$String["5", "6", "7"].map[g] == $Int[5, 6, 7]]
 
   var z String
   var a String
@@ -72,6 +72,27 @@ fn main[] {
   assert['hello'.size[] == 5]
   assert[$String['a', 'b', 'c'].size[] == 3]
   assert[$Int[45, 64].size[] == 2]
+
+  {
+    var m = new Map(String, Int)[]
+    assert[m.size[] == 0]
+    m.set["a", 5]
+    assert[m.get['a'] == 5]
+    assert[m.size[] == 1]
+    var f = fn[] {
+      m.set['b', 77]
+    }
+    f[]
+    assert[m.get['b'] == 77]
+    assert[m.size[] == 2]
+
+    var keys = $String[]
+    for key in m {
+      keys.push[key]
+    }
+    keys.sort[]
+    assert[keys == $String['a', 'b'], repr[keys]]
+  }
 
   print['basic_test pass']
 }
