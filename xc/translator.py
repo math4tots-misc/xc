@@ -653,7 +653,7 @@ class Translator(object):
 
   def parse_include(self):
     self.expect('include')
-    uri = eval((self.consume('STR') or self.consume('CHR').value))
+    uri = eval((self.consume('STR') or self.consume('CHR')).value)
     return self.process_include(uri)
 
   def process_include(self, uri):

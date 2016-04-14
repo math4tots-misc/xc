@@ -199,3 +199,5 @@ Classes
 
   * Stop using double underscores in generated C++ source.
     double underscore names are technically reserved for C++ implementation.
+
+  * Allow template constructors

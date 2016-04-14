@@ -1,3 +1,5 @@
+include 'core/set.xc'
+
 fn input[] String {
   return stdin.input[]
 }
@@ -5,5 +7,3 @@ fn input[] String {
 fn print(T)[t T] {
   stdout.print[t]
 }
-
-
