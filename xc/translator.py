@@ -761,7 +761,7 @@ class Translator(object):
       a = '\nstruct xcs_%s;\nusing xct_%s = SharedPtr<xcs_%s>;' % (
           name, name, name)
     if self.consume(':'):
-      base = 'typename ' + self.parse_type() + '::Pointee'
+      base = self.parse_type() + '::Pointee'
     else:
       base = 'xcs_Object'
     attrs = []
