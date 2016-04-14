@@ -32,6 +32,17 @@ fn main[] {
   assert[float['5.20'] == 5.2, 'str2float']
   assert[int['72'] == 72, 'str2int']
 
+  var xs = $Int[1, 2, 3]
+  assert[str[xs] == "[1, 2, 3]", "str list"]
+
+  assert[$String["4", "5", "75"].map[int] == $Int[4, 5, 75]]
+
+  print[$String["5", "6"].map[int]]
+
+  # .map[fn[i Int] Float {
+  #   return i + 7
+  # }]
+
   print['basic_test pass']
 }
 
