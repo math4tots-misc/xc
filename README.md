@@ -175,6 +175,11 @@ Classes
   * Better coverage with tests.
 
   * User defined iterable (for for loops)
+    Think of elegant solution.
+    A Java/Python-like 'iterator' class is kind of heavyweight.
+    Requiring 'begin' and 'end' methods seem kind of ok, except
+    it'll be weird to be able to create a non-primitive value type
+    by calling 'begin' and 'end' of certain builtin objects.
 
   * Consider implementing some sort of aug assignment.
 
@@ -191,3 +196,6 @@ Classes
   * Use a proper temporary file instead of "$ROOT"/a.cc
 
   * Consider Windows support.
+
+  * Stop using double underscores in generated C++ source.
+    double underscore names are technically reserved for C++ implementation.

@@ -5,3 +5,5 @@ fn input[] String {
 fn print(T)[t T] {
   stdout.print[t]
 }
+
+
