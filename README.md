@@ -153,6 +153,14 @@ Classes
     But all the above are special syntactic rules.
     'nil' is not a true expression.
 
+  * Anonymous functions always capture by value.
+    Capturing by reference can be useful, but the sorts of mistakes you
+    can make with it I feel are worse. And in general depending on mutations
+    in more places seems like a bad idea.
+    And if you really must mutate a value in the surrounding scope, you
+    can mutate e.g. List or Map. This is similar to workarounds in Python 2.x
+    when you have nested functions and want to mutate surrounding scope.
+
 ## TODO
 
   * Right now, new string objects are created every time a string literal is

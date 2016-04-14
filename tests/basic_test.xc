@@ -37,9 +37,17 @@ fn main[] {
 
   assert[$String["4", "5", "75"].map[int] == $Int[4, 5, 75]]
 
-  # .map[fn[i Int] Float {
-  #   return i + 7
-  # }]
+  assert[$Int[1, 2, 3].map[fn[i Int] Int {
+    return 2 * i + 1
+  }] == $Int[3, 5, 7]]
+
+  var f = fn[i Int] Int {
+    return 2 * i * i + 17
+  }
+  assert[$Int[5, 6, 7].map[f] == $Int[67, 89, 115]]
+
+  var g = int
+  print[$String["5", "6", "7"].map[g] == $Int[5, 6, 7]]
 
   var z String
   var a String

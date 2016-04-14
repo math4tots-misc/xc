@@ -923,6 +923,14 @@ class Translator(object):
       type_ = self.parse_type()
       args = self.parse_args()
       return '%s(new %s::Pointee(%s))' % (type_, type_, args)
+    elif self.consume('fn'):
+      args = self.parse_arg_sig()
+      if self.at('{'):
+        ret = 'xct_Void'
+      else:
+        ret = self.parse_type()
+      body = self.parse_block()
+      return '[=](%s)->%s%s' % (args, ret, body)
     elif self.consume('self'):
       return 'this'
     elif self.consume('true'):
