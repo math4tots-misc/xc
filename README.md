@@ -217,3 +217,7 @@ Classes
     then does another thing when exiting.
     Seems like it'd be straight forward with C++ local variables.
     But this is lower on my priorities right now.
+
+  * Something like C++11's 'using' or typedef where types can be aliased.
+    Also, aliasing templates should be supported as well, e.g.
+    'using Things(T) = Map(Int, T)'
