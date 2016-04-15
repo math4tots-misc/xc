@@ -1,4 +1,5 @@
 fn main[] {
+  stdout.write['iter_test... ']
   {
     var i = $Int[1, 2, 3]._iter_[]
     assert[i._more_[]]
@@ -45,5 +46,5 @@ fn main[] {
     items.sort[]
     assert[items == $String['a', 'b', 'c', 'd'], repr[items]]
   }
-  print['iter_test pass']
+  print['pass']
 }

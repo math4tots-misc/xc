@@ -1,4 +1,5 @@
 fn main[] {
+  stdout.write['augassign_test... ']
   var i = 10
   i += 12
   assert[i == 22, '+=' + repr[i]]
@@ -23,6 +24,7 @@ fn main[] {
   ec.attr = 'hi'
   ec.attr += ' there'
   assert[ec.attr == 'hi there', 'str attr += ' + repr[ec.attr]]
+  print['pass']
 }
 
 class ExampleClass {

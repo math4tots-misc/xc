@@ -1,4 +1,5 @@
 fn main[] {
+  stdout.write['prelude_test... ']
   assert[true, 'true']
   assert[not false, 'not false']
 
@@ -94,7 +95,7 @@ fn main[] {
     assert[keys == $String['a', 'b'], 'keys = ' + repr[keys]]
   }
 
-  print['prelude_test pass']
+  print['pass']
 }
 
 class ExampleClass {

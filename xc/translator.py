@@ -782,6 +782,9 @@ class Translator(object):
         additional_includes=[])
         .translate_without_prefix())
 
+  def parse_global_declaration(self):
+    return self.parse_declaration()
+
   def parse_class(self):
     self.expect('class')
     name = self.expect('ID').value

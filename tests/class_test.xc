@@ -1,4 +1,5 @@
 fn main[] {
+  stdout.write['class_test... ']
   var etc = new ExampleTemplateClass(Int)[]
   assert[etc.print[5] == 'inside ExampleTemplateBase: 5']
   var ac = new AnotherClass[]
@@ -7,7 +8,7 @@ fn main[] {
   assert[
       ac.method[] ==
       'Inside ExampleClass constructor -- and now in ExampleClass.method!']
-  print['class_test pass']
+  print['pass']
 }
 
 class ExampleTemplateBase(T) {
