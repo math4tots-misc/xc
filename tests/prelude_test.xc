@@ -69,9 +69,9 @@ fn main[] {
   ec.attr = nil
   assert[ec.attr is nil]
 
-  assert['hello'.size[] == 5]
-  assert[$String['a', 'b', 'c'].size[] == 3]
-  assert[$Int[45, 64].size[] == 2]
+  assert['hello'.size[] == 5, 'String.size']
+  assert[$String['a', 'b', 'c'].size[] == 3, 'List(String).size']
+  assert[$Int[45, 64].size[] == 2, 'List(Int).size']
 
   {
     var m = new Map(String, Int)[]
@@ -83,15 +83,15 @@ fn main[] {
       m.set['b', 77]
     }
     f[]
-    assert[m.get['b'] == 77]
-    assert[m.size[] == 2]
+    assert[m.get['b'] == 77, 'Map.get']
+    assert[m.size[] == 2, 'Map.size']
 
     var keys = $String[]
     for key in m {
       keys.push[key]
     }
     keys.sort[]
-    assert[keys == $String['a', 'b'], repr[keys]]
+    assert[keys == $String['a', 'b'], 'keys = ' + repr[keys]]
   }
 
   print['prelude_test pass']
@@ -99,4 +99,5 @@ fn main[] {
 
 class ExampleClass {
   var attr String
+  var i Int
 }

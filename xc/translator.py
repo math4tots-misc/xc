@@ -82,7 +82,7 @@ struct SharedPtr {
   }
 
   SharedPtr<T> operator+(SharedPtr<T> other) {
-    return ptr->xcmoperator_add(other);
+    return ptr->xcm_add_(other);
   }
 
   xct_Int hash() const {
@@ -106,6 +106,31 @@ struct SharedPtr {
 
   xct_Bool operator<(SharedPtr<T> p) const {
     return ptr->xcm_lt_(p);
+  }
+
+  template <class K>
+  SharedPtr<T> operator+=(K k) {
+    return *this = ptr->xcm_iadd_(k);
+  }
+
+  template <class K>
+  SharedPtr<T> operator-=(K k) {
+    return *this = ptr->xcm_isub_(k);
+  }
+
+  template <class K>
+  SharedPtr<T> operator*=(K k) {
+    return *this = ptr->xcm_imul_(k);
+  }
+
+  template <class K>
+  SharedPtr<T> operator/=(K k) {
+    return *this = ptr->xcm_idiv_(k);
+  }
+
+  template <class K>
+  SharedPtr<T> operator%=(K k) {
+    return *this = ptr->xcm_imod_(k);
   }
 
   xct_Bool is(SharedPtr<T> p) const {
@@ -233,7 +258,7 @@ struct xcs_String: xcs_Object {
   xcs_String() {}
   xcs_String(const std::string& d): data(d) {}
 
-  xct_String xcmoperator_add(xct_String other) {
+  xct_String xcm_add_(xct_String other) {
     return new xcs_String(data + other->data);
   }
 
@@ -265,6 +290,10 @@ struct xcs_String: xcs_Object {
 
   xct_Bool xcm_lt_(xct_String s) {
     return data < s->data;
+  }
+
+  xct_String xcm_iadd_(xct_String s) {
+    return new xcs_String(data + s->data);
   }
 };
 
@@ -485,7 +514,7 @@ xct_String xcv_repr(xct_Bool t) {
   return new xcs_String(t ? "true" : "false");
 }
 
-// TODO: The default impl of 'str' should call method 'operator_str'.
+// TODO: The default impl of 'str' should call method '_str_'.
 // And every value type should have a template specialization.
 // All value type specialization besides 'Char' should just
 // redirect to 'repr'. Also, template specialization for 'String'
@@ -1037,6 +1066,21 @@ class Translator(object):
         elif self.at('['):
           args = self.parse_args()
           e = '%s->xcm%s(%s)' % (e, name, args)
+        elif self.consume('+='):
+          v = self.parse_expression()
+          e = '%s->xca_%s += %s' % (e, name, v)
+        elif self.consume('-='):
+          v = self.parse_expression()
+          e = '%s->xca_%s -= %s' % (e, name, v)
+        elif self.consume('*='):
+          v = self.parse_expression()
+          e = '%s->xca_%s *= %s' % (e, name, v)
+        elif self.consume('/='):
+          v = self.parse_expression()
+          e = '%s->xca_%s /= %s' % (e, name, v)
+        elif self.consume('%='):
+          v = self.parse_expression()
+          e = '%s->xca_%s %%= %s' % (e, name, v)
         elif self.consume('='):
           if self.consume('nil'):
             e = '%s->xca_%s.set_nil()' % (e, name)
@@ -1064,6 +1108,16 @@ class Translator(object):
       elif self.at('['):
         args = self.parse_args()
         return 'xcv_%s(%s)' % (name, args)
+      elif self.consume('+='):
+        return 'xcv_%s += %s' % (name, self.parse_expression())
+      elif self.consume('-='):
+        return 'xcv_%s -= %s' % (name, self.parse_expression())
+      elif self.consume('*='):
+        return 'xcv_%s *= %s' % (name, self.parse_expression())
+      elif self.consume('/='):
+        return 'xcv_%s /= %s' % (name, self.parse_expression())
+      elif self.consume('%='):
+        return 'xcv_%s %%= %s' % (name, self.parse_expression())
       elif self.consume('='):
         if self.consume('nil'):
           return 'xcv_%s.set_nil()' % name
