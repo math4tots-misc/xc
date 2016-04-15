@@ -1,22 +1,22 @@
 fn main[] {
   {
     var i = $Int[1, 2, 3]._iter_[]
-    assert[i.more[]]
-    assert[i.next[] == 1]
-    assert[i.more[]]
-    assert[i.next[] == 2]
-    assert[i.more[]]
-    assert[i.next[] == 3]
-    assert[not i.more[]]
+    assert[i._more_[]]
+    assert[i._next_[] == 1]
+    assert[i._more_[]]
+    assert[i._next_[] == 2]
+    assert[i._more_[]]
+    assert[i._next_[] == 3]
+    assert[not i._more_[]]
   }
   {
     var m = new Map(String, Int)[]
     assert[m.size[] == 0]
     m.set['hi', 55]
     var i = m._iter_[]
-    assert[i.more[]]
-    assert[i.next[] == 'hi']
-    assert[not i.more[]]
+    assert[i._more_[]]
+    assert[i._next_[] == 'hi']
+    assert[not i._more_[]]
   }
   {
     var i = new Map(Int, String)[]
@@ -26,8 +26,8 @@ fn main[] {
         .set[7123, 'k']
         ._iter_[]
     var keys = $Int[]
-    while i.more[] {
-      keys.push[i.next[]]
+    while i._more_[] {
+      keys.push[i._next_[]]
     }
     keys.sort[]
     assert[keys == $Int[5, 44, 7123], repr[keys]]

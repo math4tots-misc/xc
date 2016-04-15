@@ -1,4 +1,5 @@
 include 'core/set.xc'
+include 'core/range.xc'
 
 fn input[] String {
   return stdin.input[]

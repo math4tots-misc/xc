@@ -182,16 +182,16 @@ private:
 template <class T>
 struct IterableSharedPtr: SharedPtr<T> {
   using I = decltype(std::declval<T>().xcm_iter_());
-  using V = decltype(std::declval<T>().xcm_iter_()->xcmnext());
+  using V = decltype(std::declval<T>().xcm_iter_()->xcm_next_());
   bool more;
   I iter;
   V item;
   IterableSharedPtr(T* p):
       SharedPtr<T>(p),
       iter(p->xcm_iter_()) {
-    if (iter->xcmmore()) {
+    if (iter->xcm_more_()) {
       more = true;
-      item = iter->xcmnext();
+      item = iter->xcm_next_();
     } else {
       more = false;
     }
@@ -206,9 +206,9 @@ struct IterableSharedPtr: SharedPtr<T> {
   }
 
   IterableSharedPtr& operator++() {
-    if (iter->xcmmore()) {
+    if (iter->xcm_more_()) {
       more = true;
-      item = iter->xcmnext();
+      item = iter->xcm_next_();
     } else {
       more = false;
     }
@@ -303,10 +303,10 @@ template <class T> struct xcs_ListIterator: xcs_Object {
   xct_List<T> owner;
   typename std::vector<T>::iterator iter;
   xcs_ListIterator(xct_List<T> xs): owner(xs), iter(xs->data.begin()) {}
-  xct_Bool xcmmore() {
+  xct_Bool xcm_more_() {
     return iter != owner->data.end();
   }
-  T xcmnext() {
+  T xcm_next_() {
     T t = *iter;
     ++iter;
     return t;
@@ -403,10 +403,10 @@ template <class K, class V> struct xcs_MapIterator: xcs_Object {
   xct_Map<K,V> owner;
   typename std::unordered_map<K,V>::iterator iter;
   xcs_MapIterator(xct_Map<K,V> xs): owner(xs), iter(xs->data.begin()) {}
-  xct_Bool xcmmore() {
+  xct_Bool xcm_more_() {
     return iter != owner->data.end();
   }
-  K xcmnext() {
+  K xcm_next_() {
     K t = iter->first;
     ++iter;
     return t;
@@ -683,18 +683,23 @@ int main(int argc, char **argv) {
   xcv_main();
 }"""
 
-def translate(source, loader=None, trace=False):
-  return Translator(source, loader=loader, trace=trace).translate()
+def translate(source, loader=None, trace=False, additional_includes=None):
+  return Translator(
+      source=source,
+      loader=loader,
+      trace=trace,
+      included=set(),
+      additional_includes=additional_includes or []).translate()
 
 class Translator(object):
 
-  def __init__(self, source, loader=None, included=None, trace=False):
+  def __init__(self, source, loader, included, trace, additional_includes):
     self.loader = loader
     self.source = source
     self.tokens = lexer.lex(source)
     self.i = 0
-    self.additional_includes = []
-    self.included = included or set()
+    self.additional_includes = additional_includes
+    self.included = included
     self.trace = trace
 
   def peek(self):
@@ -729,9 +734,9 @@ class Translator(object):
     return '\n'.join(self.parse_program())
 
   def parse_program(self):
-    a = b = c = d = ''
+    incs = a = b = c = d = ''
     for inc in self.additional_includes:
-      a += self.process_include(inc)
+      incs += self.process_include(inc)
     while not self.at('EOF'):
       if self.at('fn'):
         y, z = self.parse_function()
@@ -745,12 +750,13 @@ class Translator(object):
       elif self.at('var'):
         c += self.parse_global_declaration()
       elif self.at('include'):
-        a += self.parse_include() + a
+        incs += self.parse_include()
       elif self.consume('STR') or self.consume('CHR'):
         # TODO: Consider inserting these comments into generated source.
         pass  # string or char style comments
       else:
         raise err.Err('Expected function or class', self.peek())
+    a = incs + a
     # a = includes and forward type declarations
     # b = type declarations
     # c = function declarations and global variable definitions
@@ -763,11 +769,17 @@ class Translator(object):
     return self.process_include(uri)
 
   def process_include(self, uri):
+    if uri in self.included:
+      return ''
+    self.included.add(uri)
     data = self.loader.load(uri)
     source = lexer.Source(uri, data)
-    self.included.add(uri)
-    return (Translator(
-        source, loader=self.loader, included=self.included)
+    return '\n// uri = %s%s' % (uri, Translator(
+        source=source,
+        loader=self.loader,
+        included=self.included,
+        trace=self.trace,
+        additional_includes=[])
         .translate_without_prefix())
 
   def parse_class(self):

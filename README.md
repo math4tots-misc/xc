@@ -211,3 +211,9 @@ Classes
   * Allow template constructors
 
   * Consider including 'decltype' in the language.
+
+  * Something like Python 'with' statements.
+    i.e. context manager, something that does something when entering a block
+    then does another thing when exiting.
+    Seems like it'd be straight forward with C++ local variables.
+    But this is lower on my priorities right now.

@@ -13,12 +13,11 @@ def main(filespec, outfilespec=None):
   with open(filespec) as f:
     data = f.read()
   source = lexer.Source(filespec, data)
-  tr = translator.Translator(
-      source,
+  result = translator.translate(
+      source=source,
       loader=loader.Loader(XC_SRC_ROOT),
-      trace=True)
-  tr.additional_includes.extend(['core/prelude.xc'])
-  result = tr.translate()
+      trace=True,
+      additional_includes=['core/prelude.xc'])
   if outfilespec is None:
     print(result)
   else:
