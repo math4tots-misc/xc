@@ -45,7 +45,7 @@ Create a programming language that's pretty awesome for programming contests.
 That means
   * the resulting code must run 'fast enough' as to pass even the most
     resource intense contest challenges. (i.e. be X times less performant and
-    memory wasteful)
+    memory wasteful compared to C/C++)
   * it should be easy (and fun!) to prototype and quickly hack in.
     This will probably imply, be relatively terse.
 
