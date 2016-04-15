@@ -47,7 +47,7 @@ That means
     resource intense contest challenges. (i.e. be X times less performant and
     memory wasteful compared to C/C++)
   * it should be easy (and fun!) to prototype and quickly hack in.
-    This will probably imply, be relatively terse.
+    So, it should be less verbose than say, often what you see with Java.
 
 Secondary objective: keep the language relatively simple.
 
