@@ -284,17 +284,21 @@ struct xcs_String: xcs_Object {
     return new xcs_String(s);
   }
 
-  xct_Bool xcm_eq_(xct_String s) {
+  xct_Bool xcm_eq_(xct_String s) const {
     return data == s->data;
   }
 
-  xct_Bool xcm_lt_(xct_String s) {
+  xct_Bool xcm_lt_(xct_String s) const {
     return data < s->data;
   }
 
-  xct_String xcm_iadd_(xct_String s) {
+  xct_String xcm_iadd_(xct_String s) const {
     return new xcs_String(data + s->data);
   }
+
+  // TODO
+  // xct_List<xct_String> xcmwords() const {
+  // }
 };
 
 template <class T> struct xcs_ListIterator;
