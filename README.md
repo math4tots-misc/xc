@@ -161,6 +161,12 @@ Classes
     can mutate e.g. List or Map. This is similar to workarounds in Python 2.x
     when you have nested functions and want to mutate surrounding scope.
 
+  * 'repr' and 'str' and arithmetic operators are the only cases where
+    polymorphism is handled without methods (and even so, only for primitive
+    types). All other forms of polymorphisms should rely on method calls.
+    This is because builtin types don't support methods in C++.
+    In Java, I'll just wrap even primitive types in objects everywhere.
+
 ## TODO
 
   * Prioritize these TODOs.
