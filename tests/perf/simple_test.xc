@@ -30,6 +30,7 @@ Optimized xc is ~18x faster than Java.
 """
 
 fn main[] {
+  stdout.write['perf/simple_test... ']
   var TEN_MIL = 10000000
   var i = 0
   var xs = new List(Int)[]
@@ -43,7 +44,5 @@ fn main[] {
     total = total + x
   }
 
-  print[total]
-
-  print['perf/simple_test pass']
+  print['pass']
 }

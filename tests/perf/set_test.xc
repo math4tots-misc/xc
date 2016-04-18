@@ -21,6 +21,7 @@ sys	0m0.295s
 """
 
 fn main[] {
+  stdout.write['perf/set_test... ']
   var TEN_MIL = 10000000
   var s = new Set(Float)[]
 
@@ -35,5 +36,5 @@ fn main[] {
     total = total + x
   }
 
-  print[total]
+  print['pass']
 }

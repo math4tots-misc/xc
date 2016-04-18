@@ -1,0 +1,11 @@
+Kyumins-MacBook-Pro:xc math4tots$ for t in tests/perf/*.xc; do xc $t -notrace -O3 && time ./a.out; done
+perf/set_test... pass
+
+real	0m5.337s
+user	0m4.958s
+sys	0m0.342s
+perf/simple_test... pass
+
+real	0m0.166s
+user	0m0.083s
+sys	0m0.081s
