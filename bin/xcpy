@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import subprocess
+
+PYTHON_SRC_ROOT = os.path.realpath(os.path.join(__file__, os.pardir))
+ROOT = os.path.realpath(os.path.join(PYTHON_SRC_ROOT, os.pardir))
+
+def main():
+  # 1. Process args
+  binname = sys.argv[0]
+  args = list(sys.argv)[1:]
+  trace = 1
+
+  if '-trace'  in args and '-notrace' in args:
+    print('You cannot have both -trace and -notrace')
+    exit(1)
+  elif '-trace' in args:
+    args.remove('-trace')
+    trace = 1
+  elif '-notrace' in args:
+    args.remove('-notrace')
+    trace = 0
+
+  if not len(args):
+    print('Usage: %s <xc_source> [-[no]trace] [g++ options...]' % binname)
+
+  # 2. Translate
+  os.environ['PYTHONPATH'] = os.pathsep.join((
+      os.getenv('PYTHONPATH', ''), ROOT))
+
+  sys.path.append(ROOT)
+
+  acc = os.path.join(ROOT, 'a.cc')
+  uri = args[0]
+  code = subprocess.call(['python3', '-m', 'xc.main', uri, acc, str(trace)])
+  if code:
+    print('translation failed')
+    exit(code)
+
+  # 3. Compile
+  gccopts = args[1:]
+  code = subprocess.call([
+      'g++', '--std=c++11', '-Wall', '-Werror', '-Wpedantic',
+      acc] + gccopts)
+  if code:
+    print('compilation failed')
+    exit(code)
+
+
+if __name__ == '__main__':
+  main()

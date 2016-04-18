@@ -5,5 +5,5 @@ if [ "$#" -lt 1 ]; then
 fi
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 export PYTHONPATH="$PYTHONPATH":"$ROOT"
-python3 -m xc.main "$1" > "$ROOT"/a.cc && \
+python3 -m xc.main "$1" "$ROOT"/a.cc 1 && \
     g++ --std=c++11 -Wall -Werror -Wpedantic "$ROOT"/a.cc "${@:2}"
