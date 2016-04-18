@@ -22,6 +22,11 @@ class Translator(object):
     self.included = included
     self.trace = trace
 
+    # TODO: Use context managers with these, instead of
+    # manually assigning to them everywhere.
+    self.class_name_prefix = ''
+    self.function_name_prefix = ''
+
   def peek(self):
     return self.tokens[self.i]
 
@@ -115,6 +120,7 @@ class Translator(object):
   def parse_class(self):
     self.expect('class')
     name = self.expect('ID').value
+    self.class_name_prefix = name + '.'
     if self.at('('):
       typeargs = self.parse_typearg_sig()
       # TODO: Don't do this hack. Figure out a cleaner solution.
@@ -160,6 +166,7 @@ class Translator(object):
           ''.join(attrs).replace('\n', '\n  '),
           ''.join(decls).replace('\n', '\n  '))
     c = ''.join(defns)
+    self.class_name_prefix = ''
     return a, b, c
 
   def parse_attribute(self):
@@ -172,7 +179,7 @@ class Translator(object):
     token = self.expect('fn')
     if self.at('['):  # NOTE: constructors cannot have template args
       return self.parse_rest_of_constructor(class_name, typeargs, token)
-    name = self.expect('ID').value
+    self.function_name_prefix = name = self.expect('ID').value
     # TODO: Think about whether I want to allow template methods.
     argsig = self.parse_arg_sig()
     if not self.at('{'):
@@ -196,10 +203,11 @@ class Translator(object):
           if name != 'class')
       defn = '\ntemplate <%s>\n%s xcs_%s<%s>::xcm%s(%s)%s' % (
           typeargs, ret, class_name, typeargnames, name, argsig, body)
-
+    self.function_name_prefix = ''
     return decl, defn
 
   def parse_rest_of_constructor(self, class_name, typeargs, token):
+    self.function_name_prefix = '<constructor>'
     argsig = self.parse_arg_sig()
     body = self.parse_block()
 
@@ -215,11 +223,13 @@ class Translator(object):
           if name != 'class')
       defn = '\ntemplate <%s>\nxcs_%s<%s>::xcs_%s(%s)%s' % (
           typeargs, class_name, typeargnames, class_name, argsig, body)
+    self.function_name_prefix = ''
     return decl, defn
 
   def parse_function(self):
     token = self.expect('fn')
     raw_name = self.expect('ID').value
+    self.function_name_prefix = raw_name
     name = 'xcv_' + raw_name
     if self.at('('):
       typeargs = self.parse_typearg_sig()
@@ -236,6 +246,7 @@ class Translator(object):
       sig = '%s %s(%s)' % (type_, name, args)
     else:
       sig = 'template <%s>\n%s %s(%s)' % (typeargs, type_, name, args)
+    self.function_name_prefix = ''
     return '\n%s;' % sig, '\n%s%s' % (sig, body)
 
   def parse_type(self):
@@ -260,6 +271,16 @@ class Translator(object):
       container = self.parse_top_level_expression()
       body = self.parse_block()
       return '\nfor (auto xcv_%s: %s.iterptr())%s' % (name, container, body)
+    elif self.consume('if'):
+      cond = self.parse_top_level_expression()
+      body = self.parse_block()
+      other = ''
+      if self.consume('else'):
+        if self.at('if'):
+          other = '\nelse' + self.parse_statement()
+        else:
+          other = '\nelse' + self.parse_block()
+      return 'if (%s)%s%s' % (cond, body, other)
     elif self.consume('return'):
       return '\nreturn %s;' % self.parse_top_level_expression()
     elif self.at('{'):
@@ -464,6 +485,8 @@ class Translator(object):
       args = self.parse_args()
       return '%s(new typename %s::Pointee(%s))' % (type_, type_, args)
     elif self.consume('fn'):
+      old_prefix = self.function_name_prefix
+      self.function_name_prefix = '<anonymous>'
       args = self.parse_arg_sig()
       if self.at('{'):
         ret = 'xct_Void'
@@ -472,6 +495,7 @@ class Translator(object):
       body = self.parse_block()
       if ret == 'xct_Void':
         body = patch_block_with_nil_return(body)
+      self.function_name_prefix = old_prefix
       return '[=](%s)->%s%s' % (args, ret, body)
     elif self.consume('self'):
       return 'this'
@@ -554,21 +578,16 @@ class Translator(object):
     return ', '.join(args)
 
   def parse_top_level_expression(self):
-    if self.trace:
-      token = self.peek()
-      filespec = token.source.filespec
-      lineno = token.lineno()
-      return self.patch_expression_with_frame(
-          self.parse_expression(), filespec, lineno)
-    else:
-      return self.parse_expression()
+    token = self.peek()
+    filespec = token.source.filespec
+    lineno = token.lineno()
+    return self.patch_expression_with_frame(
+        self.parse_expression(), filespec, lineno)
 
   def patch_expression_with_frame(self, expr, filespec, lineno):
-    if self.trace:
-      return r'Frame("in file \"%s\"", %d).with(%s)' % (
-        filespec, lineno, expr)
-    else:
-      return expr
+    return r'WITH_FRAME("File \"%s\", line ", %d, " in %s", (%s))' % (
+        filespec, lineno,
+        self.class_name_prefix + self.function_name_prefix, expr)
 
 def sanitize_string(s):
   return (s

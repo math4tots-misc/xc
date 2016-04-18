@@ -30,8 +30,6 @@ def main():
   os.environ['PYTHONPATH'] = os.pathsep.join((
       os.getenv('PYTHONPATH', ''), ROOT))
 
-  sys.path.append(ROOT)
-
   acc = os.path.join(ROOT, 'a.cc')
   uri = args[0]
   code = subprocess.call(['python3', '-m', 'xc.main', uri, acc, str(trace)])
