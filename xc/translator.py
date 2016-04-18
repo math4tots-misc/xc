@@ -81,6 +81,8 @@ class Translator(object):
         d += z
       elif self.at('var'):
         c += self.parse_global_declaration()
+      elif self.at('using'):
+        a += self.parse_using()
       elif self.at('include'):
         incs += self.parse_include()
       elif self.consume('STR') or self.consume('CHR'):
@@ -287,13 +289,27 @@ class Translator(object):
       return self.parse_block()
     elif self.at('var'):
       return self.parse_declaration()
+    elif self.at('using'):
+      return self.parse_using()
     else:
       return '\n%s;' % self.parse_top_level_expression()
 
+  def parse_using(self):
+    self.expect('using')
+    name = self.expect('ID').value
+    args = None
+    if self.at('('):
+      args = self.parse_typearg_sig()
+    self.expect('=')
+    type_ = self.parse_type()
+    if args is None:
+      return '\nusing xct_%s = %s;' % (name, type_)
+    else:
+      return '\ntemplate <%s> using xct_%s = %s;' % (args, name, type_)
+
+
   def parse_declaration(self):
-    token = self.expect('var')
-    lineno = token.lineno()
-    filespec = token.source.filespec
+    self.expect('var')
     name = self.expect('ID').value
     if not self.at('='):
       type_ = self.parse_type()
