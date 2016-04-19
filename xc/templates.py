@@ -131,6 +131,11 @@ struct SharedPtr {
     return *this;
   }
 
+  template <class K>
+  SharedPtr<K> cast() const {
+    return SharedPtr<K>(dynamic_cast<K*>(ptr));
+  }
+
   T* operator->() const {
     // TODO: Consider whether this check is worth it.
     // TODO: If I'm going to keep this check maybe include the

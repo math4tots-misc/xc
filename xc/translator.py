@@ -430,7 +430,7 @@ class Translator(object):
 
   def parse_postfix_expression(self):
     e = self.parse_primary_expression()
-    while self.at('.'):
+    while True:
       if self.consume('.'):
         name = self.expect('ID').value
         if self.at('(') or self.at('['):
@@ -458,6 +458,9 @@ class Translator(object):
             e = '%s->xca_%s = %s' % (e, name, v)
         else:
           e = '%s->xca_%s' % (e, name)
+      elif self.consume('as'):
+        t = self.parse_type()
+        e = '%s.cast<%s::Pointee>()' % (e, t)
       else:
         break
     return e
