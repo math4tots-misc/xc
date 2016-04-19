@@ -353,6 +353,7 @@ struct xcs_Iterator: virtual xcs_Iterable<T> {
 
 struct xcs_String final: xcs_Object {
   const std::string data;
+
   xcs_String() {}
   xcs_String(const std::string& d): data(d) {}
 
@@ -394,7 +395,54 @@ struct xcs_String final: xcs_Object {
     return new xcs_String(data + s->data);
   }
 
-  xct_String xcm_mod_(xct_Iterable<xct_String> xs) const;
+  xct_String xcmjoin(xct_Iterable<xct_String> xs) const {
+    auto iter = xs->xcm_iter_();
+    if (!iter->xcm_more_())
+      return new xcs_String("");
+
+    std::string s;
+    s.append(iter->xcm_next_()->data);
+
+    while (iter->xcm_more_()) {
+      s.append(data);
+      s.append(iter->xcm_next_()->data);
+    }
+    return new xcs_String(s);
+  }
+
+  xct_String xcm_mod_(xct_Iterable<xct_String> xs) const {
+    std::string s;
+    char last = 'x';
+    auto iter = xs->xcm_iter_();
+    for (char c: data) {
+      if (last == '%') {
+        if (c == '%') {
+          s.push_back('%');
+        } else if (c == 's') {
+          if (!iter->xcm_more_()) {
+            die("Not enough arguments to string format");
+          }
+          s.append(iter->xcm_next_()->data);
+        } else {
+          die(std::string("Invalid format char: ") + c);
+        }
+      } else {
+        if (c != '%') {
+          s.push_back(c);
+        }
+      }
+
+      if (last == '%' && c == '%')
+        last = 'x';
+      else
+        last = c;
+    }
+    if (iter->xcm_more_()) {
+      die("Too many arguments to string format");
+    }
+    return new xcs_String(s);
+  }
+
   xct_List<xct_String> xcmwords() const;
   xct_List<xct_String> xcmlines() const;
 };
@@ -507,39 +555,6 @@ struct xcs_List final: xcs_Iterable<T> {
     return seed;
   }
 };
-
-xct_String xcs_String::xcm_mod_(xct_Iterable<xct_String> xs) const {
-  std::string s;
-  char last = 'x';
-  auto iter = xs->xcm_iter_();
-  for (char c: data) {
-    if (last == '%') {
-      if (c == '%') {
-        s.push_back('%');
-      } else if (c == 's') {
-        if (!iter->xcm_more_()) {
-          die("Not enough arguments to string format");
-        }
-        s.append(iter->xcm_next_()->data);
-      } else {
-        die(std::string("Invalid format char: ") + c);
-      }
-    } else {
-      if (c != '%') {
-        s.push_back(c);
-      }
-    }
-
-    if (last == '%' && c == '%')
-      last = 'x';
-    else
-      last = c;
-  }
-  if (iter->xcm_more_()) {
-    die("Too many arguments to string format");
-  }
-  return new xcs_String(s);
-}
 
 xct_List<xct_String> xcs_String::xcmwords() const {
   xct_List<xct_String> words(new xcs_List<xct_String>({}));

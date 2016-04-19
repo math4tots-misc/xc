@@ -43,5 +43,12 @@ a b c d
     assert['%s%s' % $String['hello', 'world'] == 'helloworld', '%2']
   }
 
+  {
+    var s = ', '.join[$String['a', 'b', 'cc']]
+    assert[s == 'a, b, cc', repr[s]]
+    s = ', '.join[$String[]]
+    assert[s == '', repr[s]]
+  }
+
   print['pass']
 }

@@ -191,7 +191,6 @@ Classes
 ## TODO
 
   * Syntax for casting types (dynamic cast)
-  * String.join
 
 ### Not directly actionable TODOs, but just feelings
 
@@ -275,4 +274,4 @@ Classes
   * String.\_mod\_
   * List(T).\_hash\_
   * Map(K,V).\_hash\_
-
+  * String.join
