@@ -78,6 +78,12 @@ PREFIX_3 = r"""
 template <class F, class... Args>
 using ResultOf = typename std::result_of<F(Args...)>::type;
 
+template <class T>
+inline void hash_combine(std::size_t& seed, const T& v) {
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+}
+
 typedef bool xct_Bool;
 typedef char xct_Char;
 typedef long long xct_Int;
@@ -493,6 +499,13 @@ struct xcs_List final: xcs_Iterable<T> {
   xct_Iterator<T> xcm_iter_() final {
     return new xcs_ListIterator<T>(this);
   }
+
+  xct_Int xcm_hash_() {
+    size_t seed = 0;
+    for (auto item: data)
+      hash_combine(seed, item);
+    return seed;
+  }
 };
 
 xct_String xcs_String::xcm_mod_(xct_Iterable<xct_String> xs) const {
@@ -649,6 +662,15 @@ struct xcs_Map final: xcs_Iterable<K> {
 
   xct_Bool xcm_eq_(xct_Map<K,V> m) {
     return data == m->data;
+  }
+
+  xct_Int xcm_hash_() {
+    size_t seed = 0;
+    for (auto& pair: data) {
+      hash_combine(seed, pair.first);
+      hash_combine(seed, pair.second);
+    }
+    return seed;
   }
 };
 

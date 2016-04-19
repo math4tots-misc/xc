@@ -192,8 +192,6 @@ Classes
 
   * Syntax for casting types (dynamic cast)
   * String.join
-  * List(T).\_hash\_
-  * Map(K,V).\_hash\_
 
 ### Not directly actionable TODOs, but just feelings
 
@@ -275,4 +273,6 @@ Classes
   * String.words
   * String.lines
   * String.\_mod\_
+  * List(T).\_hash\_
+  * Map(K,V).\_hash\_
 
