@@ -9,3 +9,31 @@ perf/simple_test... pass
 real	0m0.166s
 user	0m0.083s
 sys	0m0.081s
+
+----------------------------------------
+
+_iter_ method is now virtual and returns Iterator<T>
+
+Kyumins-MacBook-Pro:xc math4tots$ for t in tests/perf/*.xc; do xc $t && time ./a.out; done
+perf/set_test... pass
+
+real	0m10.999s
+user	0m10.697s
+sys	0m0.292s
+perf/simple_test... pass
+
+real	0m2.608s
+user	0m2.525s
+sys	0m0.074s
+Kyumins-MacBook-Pro:xc math4tots$ for t in tests/perf/*.xc; do xc $t -O3 && time ./a.out; done
+perf/set_test... pass
+
+real	0m5.065s
+user	0m4.774s
+sys	0m0.283s
+perf/simple_test... pass
+
+real	0m0.267s
+user	0m0.188s
+sys	0m0.075s
+

@@ -68,33 +68,42 @@ I think this is the language that I kinda wished Java was.
 
 ## Builtins
 
-Primitive types (Can't subclass these, C++ enforces this)
+Primitive types
   * Bool
   * Char
   * Int
   * Float
 
-Classes (Subclassing these is illegal (except Object), but not yet enforced)
+Classes
   * Object (super of all classes)
     * operator_str  # TODO
   * String
-    * operator_repr
-    * operator_add
-    * operator_modulo
+    * \_repr\_
+    * \_add\_
+    * \_mod\_
     * lines
     * words
-  * List(T)
-    * operator_repr
-    * operator_add
+    * map
+  * List(T) < Iterable(T)
+    * \_repr\_
+    * \_add\_
+    * \_iter\_
     * push
     * pop
     * get
     * set
-  * Map(K, V)
-    * operator_repr
+  * Map(K, V) < Iterable(K)
+    * \_repr\_
+    * \_iter\_
     * contains
     * get
     * set
+  * Iterable(T)
+    * \_iter\_
+  * Iterator(T) < Iterable(T)
+    * \_iter\_
+    * \_more\_
+    * \_next\_
 
 Functions
   * repr(T)

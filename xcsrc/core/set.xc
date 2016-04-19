@@ -1,5 +1,3 @@
-using SetIterator(T) = MapIterator(T, Bool)
-
 class Set(T) {
   var data Map(T, Bool)
 
@@ -42,7 +40,7 @@ class Set(T) {
     return self.data.size[]
   }
 
-  fn _iter_[] SetIterator(T) {
+  fn _iter_[] Iterator(T) {
     return self.data._iter_[]
   }
 }
