@@ -76,50 +76,58 @@ Primitive types
 
 Classes
   * Object (super of all classes)
-    * operator_str  # TODO
-  * String
-    * \_repr\_
-    * \_add\_
-    * \_mod\_
-    * lines
-    * words
-    * map
-  * List(T) < Iterable(T)
-    * \_repr\_
-    * \_add\_
-    * \_iter\_
-    * push
-    * pop
-    * get
-    * set
-  * Map(K, V) < Iterable(K)
-    * \_repr\_
-    * \_iter\_
-    * contains
-    * get
-    * set
+    * \_repr\_[] String
   * Iterable(T)
-    * \_iter\_
+    * \_iter\_[] Iterator(T)
   * Iterator(T) < Iterable(T)
-    * \_iter\_
-    * \_more\_
-    * \_next\_
+    * \_iter\_[] Iterator(T)
+    * \_more\_[] Bool
+    * \_next\_[] T
+  * String
+    * \_repr\_[] String
+    * \_add\_[String] String
+    * \_mod\_(T)[List(T)] String
+    * \_hash\_[] Int
+    * lines[] List(String)
+    * words[] List(String)
+  * ListIterator(T) < Iterator(T)
+  * List(T) < Iterable(T)
+    * \_repr\_[] String
+    * \_add\_[List(T)] List(T)
+    * \_iter\_[] Iterator(T)
+    * \_hash\_[] Int
+    * push[T] List(T)
+    * pop[] T
+    * get[Int] T
+    * set[Int, T] List(T)
+    * map(F)[F] ResultOf(F, T)
+  * MapIterator(K,V) < Iterator(K)
+  * Map(K, V) < Iterable(K)
+    * \_repr\_[] String
+    * \_iter\_[] Iterator(K)
+    * \_hash\_[] Int
+    * has[K] Bool
+    * get[K] V
+    * set[K, V] Map(K,V)
 
 Functions
-  * repr(T)
+  * repr(T)[T] String
     * repr(Bool)
     * repr(Char)
     * repr(Int)
     * repr(Float)
     * default calls 'operator_repr' method.
-  * str(T)
+  * str(T)[T] String
     * default requires repr(T)
       * TDOO: change this to call 'operator_str' instead.
         and have 'Object' class implement a default 'operator_str'
         that calls 'operator_repr'.
         Specialize for builtin types.
-  * print(T)
+  * print(T)[T]
     * default requires str(T)
+  * trace[] String
+  * int[String] Int
+  * float[String] Float
 
 Non-language core stuff
 
@@ -178,13 +186,11 @@ Classes
 
 ## TODO
 
-  * Implement a 'super' syntax that lets you call super methods.
-
-  * Something like Python 'with' statements.
-    i.e. context manager, something that does something when entering a block
-    then does another thing when exiting.
-    Seems like it'd be straight forward with C++ local variables.
-    But this is lower on my priorities right now.
+  * String.\_mod\_
+  * String.words
+  * String.lines
+  * List(T).\_hash\_
+  * Map(K,V).\_hash\_
 
 ### Not directly actionable TODOs, but just feelings
 
@@ -237,6 +243,12 @@ Classes
   * Some level of reflection e.g. Get the name of an object's type.
     Doesn't seem that important right now.
 
+  * Something like Python 'with' statements.
+    i.e. context manager, something that does something when entering a block
+    then does another thing when exiting.
+    Seems like it'd be straight forward with C++ local variables.
+    But this is lower on my priorities right now.
+
 ### Finished TODOs
 
   * Something like C++11's 'using' or typedef where types can be aliased.
@@ -252,3 +264,5 @@ Classes
     Requiring 'begin' and 'end' methods seem kind of ok, except
     it'll be weird to be able to create a non-primitive value type
     by calling 'begin' and 'end' of certain builtin objects.
+
+  * Implement a 'super' syntax that lets you call super methods.
