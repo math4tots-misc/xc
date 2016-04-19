@@ -369,9 +369,8 @@ struct xcs_String final: xcs_Object {
     return new xcs_String(data + s->data);
   }
 
-  // TODO
-  // xct_List<xct_String> xcmwords() const {
-  // }
+  xct_List<xct_String> xcmwords() const;
+  xct_List<xct_String> xcmlines() const;
 };
 
 template <class T> struct xcs_ListIterator;
@@ -475,6 +474,44 @@ struct xcs_List final: xcs_Iterable<T> {
     return new xcs_ListIterator<T>(this);
   }
 };
+
+xct_List<xct_String> xcs_String::xcmwords() const {
+  xct_List<xct_String> words(new xcs_List<xct_String>({}));
+  std::string word;
+  for (char c: data) {
+    if (isspace(c)) {
+      if (!word.empty()) {
+        words->xcmpush(new xcs_String(word));
+        word.clear();
+      }
+    } else {
+      word.push_back(c);
+    }
+  }
+  if (!word.empty()) {
+    words->xcmpush(new xcs_String(word));
+  }
+  return words;
+}
+
+xct_List<xct_String> xcs_String::xcmlines() const {
+  xct_List<xct_String> words(new xcs_List<xct_String>({}));
+  std::string word;
+  for (char c: data) {
+    if (c == '\n') {
+      if (!word.empty()) {
+        words->xcmpush(new xcs_String(word));
+        word.clear();
+      }
+    } else {
+      word.push_back(c);
+    }
+  }
+  if (!word.empty()) {
+    words->xcmpush(new xcs_String(word));
+  }
+  return words;
+}
 
 template <class K, class V> struct xcs_MapIterator;
 template <class K, class V> using xct_MapIterator =

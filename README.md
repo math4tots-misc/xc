@@ -187,8 +187,6 @@ Classes
 ## TODO
 
   * String.\_mod\_
-  * String.words
-  * String.lines
   * List(T).\_hash\_
   * Map(K,V).\_hash\_
 
@@ -266,3 +264,6 @@ Classes
     by calling 'begin' and 'end' of certain builtin objects.
 
   * Implement a 'super' syntax that lets you call super methods.
+
+  * String.words
+  * String.lines
