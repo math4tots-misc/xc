@@ -17,7 +17,8 @@ symbols = tuple(reversed(sorted((
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
     'var', 'include', 'extern', 'new', 'true', 'false', 'self',
-    'class', 'for', 'in', 'is', 'not', 'and', 'or', 'nil', 'using')
+    'class', 'for', 'in', 'is', 'not', 'and', 'or', 'nil', 'using',
+    'super')
 whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
 token_table = tuple((type_, compile_re(pattern)) for type_, pattern in

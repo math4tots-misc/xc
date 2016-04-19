@@ -178,11 +178,7 @@ Classes
 
 ## TODO
 
-  * Prioritize these TODOs.
-
   * Implement a 'super' syntax that lets you call super methods.
-
-  * Some level of reflection e.g. Get the name of an object's type.
 
   * Something like Python 'with' statements.
     i.e. context manager, something that does something when entering a block
@@ -191,6 +187,8 @@ Classes
     But this is lower on my priorities right now.
 
 ### Not directly actionable TODOs, but just feelings
+
+  * Keep these TODOs prioritized.
 
   * Better coverage with tests.
 
@@ -235,6 +233,9 @@ Classes
     Strings must be immutable, so this seems basically safe.
     Performance so far seems ok without it. Come back to this if becomes
     issue.
+
+  * Some level of reflection e.g. Get the name of an object's type.
+    Doesn't seem that important right now.
 
 ### Finished TODOs
 

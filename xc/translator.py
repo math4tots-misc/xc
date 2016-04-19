@@ -26,6 +26,7 @@ class Translator(object):
     # manually assigning to them everywhere.
     self.class_name_prefix = ''
     self.function_name_prefix = ''
+    self.base_class_name = ''
 
   def peek(self):
     return self.tokens[self.i]
@@ -139,10 +140,11 @@ class Translator(object):
       typeargs = None
       a = '\nstruct xcs_%s;\nusing xct_%s = SharedPtr<xcs_%s>;' % (
           name, name, name)
-    if self.consume(':'):
+    if self.consume('<'):
       base = self.parse_type() + '::Pointee'
     else:
       base = 'xcs_Object'
+    self.base_class_name = base
     attrs = []
     decls = []
     defns = []
@@ -169,6 +171,7 @@ class Translator(object):
           ''.join(decls).replace('\n', '\n  '))
     c = ''.join(defns)
     self.class_name_prefix = ''
+    self.base_class_name = ''
     return a, b, c
 
   def parse_attribute(self):
@@ -430,13 +433,8 @@ class Translator(object):
     while self.at('.'):
       if self.consume('.'):
         name = self.expect('ID').value
-        if self.at('('):
-          typeargs = self.parse_typeargs()
-          args = self.parse_args()
-          e = '%s->xcm%s<%s>(%s)' % (e, name, typeargs, args)
-        elif self.at('['):
-          args = self.parse_args()
-          e = '%s->xcm%s(%s)' % (e, name, args)
+        if self.at('(') or self.at('['):
+          e = '%s->xcm%s%s' % (e, name, self.parse_fullarg())
         elif self.consume('+='):
           v = self.parse_expression()
           e = '%s->xca_%s += %s' % (e, name, v)
@@ -472,13 +470,8 @@ class Translator(object):
       return '(%s)' % e
     elif self.at('ID'):
       name = self.expect('ID').value
-      if self.at('('):
-        typeargs = self.parse_typeargs()
-        args = self.parse_args()
-        return 'xcv_%s<%s>(%s)' % (name, typeargs, args)
-      elif self.at('['):
-        args = self.parse_args()
-        return 'xcv_%s(%s)' % (name, args)
+      if self.at('(') or self.at('['):
+        return 'xcv_%s%s' % (name, self.parse_fullarg())
       elif self.consume('+='):
         return 'xcv_%s += %s' % (name, self.parse_expression())
       elif self.consume('-='):
@@ -514,7 +507,16 @@ class Translator(object):
       self.function_name_prefix = old_prefix
       return '[=](%s)->%s%s' % (args, ret, body)
     elif self.consume('self'):
+      if self.class_name_prefix == '':
+        raise err.Err('Used "self" outside of class definition', token)
       return 'this'
+    elif self.consume('super'):
+      if self.base_class_name == '':
+        raise err.Err('Used "super" outside of class definition', token)
+      self.expect('.')
+      method_name = self.expect('ID').value
+      return '%s::xcm%s%s' % (
+          self.base_class_name, method_name, self.parse_fullarg())
     elif self.consume('true'):
       return 'true'
     elif self.consume('false'):
@@ -551,10 +553,9 @@ class Translator(object):
     return '\n{%s\n}' % ''.join(stmts).replace('\n', '\n  ')
 
   def parse_fullarg_sig(self):
+    typeargs = None
     if self.at('('):
       typeargs = self.parse_typearg_sig()
-    else:
-      typeargs = None
     args = self.parse_arg_sig()
     return typeargs, args
 
@@ -576,6 +577,16 @@ class Translator(object):
       args.append('class ' + name)
       self.consume(',')
     return ', '.join(args)
+
+  def parse_fullarg(self):
+    targs = None
+    if self.at('('):
+      targs = self.parse_typeargs()
+    args = self.parse_args()
+    if targs is None:
+      return '(%s)' % args
+    else:
+      return '<%s>(%s)' % (targs, args)
 
   def parse_typeargs(self):
     self.expect('(')

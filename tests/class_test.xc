@@ -16,7 +16,7 @@ class ExampleTemplateBase(T) {
     return 'inside ExampleTemplateBase: ' + str[t]
   }
 }
-class ExampleTemplateClass(T): ExampleTemplateBase(T) {}
+class ExampleTemplateClass(T) < ExampleTemplateBase(T) {}
 
 class ExampleClass {
   var i Int
@@ -31,4 +31,4 @@ class ExampleClass {
   }
 }
 
-class AnotherClass: ExampleClass {}
+class AnotherClass < ExampleClass {}
