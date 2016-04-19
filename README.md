@@ -180,52 +180,9 @@ Classes
 
   * Prioritize these TODOs.
 
-  * Right now, the C++ compiler is responsible for catching many of the
-    static errors.
-    It's going to take a lot more work, since right now the transpiler
-    is pretty dumb, but eventually I want to catch all compile time
-    errors at transpile time.
-
-  * Right now, new string objects are created every time a string literal is
-    referenced. If it becomes an issue, might be worth allocating string
-    literals in global scope and just reusing them.
-    Strings must be immutable, so this seems basically safe.
-
   * Implement a 'super' syntax that lets you call super methods.
 
   * Some level of reflection e.g. Get the name of an object's type.
-
-  * Better coverage with tests.
-
-  * User defined iterable (for for loops)
-    Think of elegant solution.
-    A Java/Python-like 'iterator' class is kind of heavyweight.
-    Requiring 'begin' and 'end' methods seem kind of ok, except
-    it'll be weird to be able to create a non-primitive value type
-    by calling 'begin' and 'end' of certain builtin objects.
-
-  * Consider implementing some sort of aug assignment.
-
-  * Seriously, clean up all the code debt I've been racking up...
-
-  * Add line numbers to stack trace (i.e. line numbers of where
-    functions are invoked).
-
-  * Would be nice to print stack trace on segfault.
-
-  * Allow 'include' directives to refer to multiple source roots as well
-    as from remote git repositories.
-
-  * Use a proper temporary file instead of "$ROOT"/a.cc
-
-  * Consider Windows support.
-
-  * Stop using double underscores in generated C++ source.
-    double underscore names are technically reserved for C++ implementation.
-
-  * Allow template constructors
-
-  * Consider including 'decltype' in the language.
 
   * Something like Python 'with' statements.
     i.e. context manager, something that does something when entering a block
@@ -233,6 +190,64 @@ Classes
     Seems like it'd be straight forward with C++ local variables.
     But this is lower on my priorities right now.
 
+### Not directly actionable TODOs, but just feelings
+
+  * Better coverage with tests.
+
+  * Seriously, clean up all the code debt I've been racking up...
+
+### TODO eventually, but not now
+
+  * Would be nice to print stack trace on segfault.
+    Getting a portable way to handle segfaults doesn't seem simple.
+    Instead, try to check at most places where there might be a segfault,
+    and check before running (like the nullptr check already implemented).
+
+  * Consider Windows support.
+    For now just use Cygwin.
+
+  * Allow template constructors
+    Doesn't seem that important at the moment.
+
+  * Consider including 'decltype' in the language.
+    Instead, simplify the type system, and use e.g. inheritance/interfaces.
+
+  * Use a proper temporary file instead of "$ROOT"/a.cc
+    Low priority.
+
+  * Right now, the C++ compiler is responsible for catching many of the
+    static errors.
+    It's going to take a lot more work, since right now the transpiler
+    is pretty dumb, but eventually I want to catch all compile time
+    errors at transpile time.
+    This is going to be a lot of work. Only do this if this actually
+    becomes a problem.
+
+  * Allow 'include' directives to refer to multiple source roots as well
+    as from remote git repositories.
+    Right now, since I'm the only one using this, just putting library
+    stuff in 'xcsrc' is good enough. If this actually becoms a real
+    thing where many people use it, then I'll come back to this.
+
+  * Right now, new string objects are created every time a string literal is
+    referenced. If it becomes an issue, might be worth allocating string
+    literals in global scope and just reusing them.
+    Strings must be immutable, so this seems basically safe.
+    Performance so far seems ok without it. Come back to this if becomes
+    issue.
+
+### Finished TODOs
+
   * Something like C++11's 'using' or typedef where types can be aliased.
     Also, aliasing templates should be supported as well, e.g.
     'using Things(T) = Map(Int, T)'
+
+  * Add line numbers to stack trace (i.e. line numbers of where
+    functions are invoked).
+
+  * User defined iterable (for for loops)
+    Think of elegant solution.
+    A Java/Python-like 'iterator' class is kind of heavyweight.
+    Requiring 'begin' and 'end' methods seem kind of ok, except
+    it'll be weird to be able to create a non-primitive value type
+    by calling 'begin' and 'end' of certain builtin objects.

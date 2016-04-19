@@ -300,7 +300,7 @@ using xct_String = SharedPtr<xcs_String>;
 template <class T> struct xcs_List;
 template <class T> using xct_List = SharedPtr<xcs_List<T>>;
 template <class K, class V> struct xcs_Map;
-template <class K, class V> using xct_Map = SharedPtr<xcs_Map<K, V>>;
+template <class K, class V> using xct_Map = SharedPtr<xcs_Map<K,V>>;
 template <class T> struct xcs_Iterable;
 template <class T> using xct_Iterable = SharedPtr<xcs_Iterable<T>>;
 template <class T> struct xcs_Iterator;
@@ -454,7 +454,7 @@ struct xcs_List final: xcs_Iterable<T> {
 
   template <class F>
   auto xcmmap(F f) -> xct_List<ResultOf<F,T>> {
-    using K = ResultOf<F, T>;
+    using K = ResultOf<F,T>;
     xct_List<K> result(new xcs_List<K>());
     for (T t: data) {
       result->xcmpush(f(t));
