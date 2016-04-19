@@ -32,5 +32,16 @@ a b c d
       $String["a b c d", "  asdf fghj", "83/uoi.LKFJ 3940"],
       repr[lines]]
 
+
+  {
+    var format = "%s %% %s %%"
+    var s String
+    assert[
+        (s = format % $String['hi', 'there']) ==
+        "hi % there %", '%: ' + s]
+
+    assert['%s%s' % $String['hello', 'world'] == 'helloworld', '%2']
+  }
+
   print['pass']
 }

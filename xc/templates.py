@@ -111,9 +111,8 @@ struct SharedPtr {
   SharedPtr(): ptr(nullptr) {}
   SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
 
-  //// TODO: Consider whether the following template constructor is
-  //// worth having.
-  // template <class K> SharedPtr(SharedPtr<K> p): SharedPtr(p->ptr) {}
+  template <class K>
+  SharedPtr(SharedPtr<K> p): SharedPtr(p.ptr) {}
 
   SharedPtr(const SharedPtr<T>& p): ptr(p.ptr) { incr(); }
   ~SharedPtr() { decr(); }
@@ -136,8 +135,29 @@ struct SharedPtr {
     return ptr;
   }
 
-  SharedPtr<T> operator+(SharedPtr<T> other) {
+  template <class K>
+  SharedPtr<T> operator+(SharedPtr<K> other) {
     return ptr->xcm_add_(other);
+  }
+
+  template <class K>
+  SharedPtr<T> operator-(SharedPtr<K> other) {
+    return ptr->xcm_sub_(other);
+  }
+
+  template <class K>
+  SharedPtr<T> operator*(SharedPtr<K> other) {
+    return ptr->xcm_mul_(other);
+  }
+
+  template <class K>
+  SharedPtr<T> operator/(SharedPtr<K> other) {
+    return ptr->xcm_div_(other);
+  }
+
+  template <class K>
+  SharedPtr<T> operator%(SharedPtr<K> other) {
+    return ptr->xcm_mod_(other);
   }
 
   xct_Int hash() const {
@@ -146,11 +166,6 @@ struct SharedPtr {
 
   IterableSharedPtr<T> iterptr() const;
 
-  // TODO: Understand how this works even when 'T' is a type that does
-  // not implement 'xcm_eq_'.
-  // An alternative solution would be to have an 'equals' template function
-  // that always directly calls 'xcm_eq_' on SharedPtr<T>,
-  // and specialize for builtin types.
   xct_Bool operator==(SharedPtr<T> p) const {
     return ptr == p.ptr || ptr->xcm_eq_(p);
   }
@@ -214,6 +229,10 @@ protected:
   T* ptr;
 
 private:
+
+  template <class K>
+  friend struct SharedPtr;
+
   void incr() {
     if (ptr != nullptr)
       ptr->increment_refcnt();
@@ -369,6 +388,7 @@ struct xcs_String final: xcs_Object {
     return new xcs_String(data + s->data);
   }
 
+  xct_String xcm_mod_(xct_Iterable<xct_String> xs) const;
   xct_List<xct_String> xcmwords() const;
   xct_List<xct_String> xcmlines() const;
 };
@@ -474,6 +494,39 @@ struct xcs_List final: xcs_Iterable<T> {
     return new xcs_ListIterator<T>(this);
   }
 };
+
+xct_String xcs_String::xcm_mod_(xct_Iterable<xct_String> xs) const {
+  std::string s;
+  char last = 'x';
+  auto iter = xs->xcm_iter_();
+  for (char c: data) {
+    if (last == '%') {
+      if (c == '%') {
+        s.push_back('%');
+      } else if (c == 's') {
+        if (!iter->xcm_more_()) {
+          die("Not enough arguments to string format");
+        }
+        s.append(iter->xcm_next_()->data);
+      } else {
+        die(std::string("Invalid format char: ") + c);
+      }
+    } else {
+      if (c != '%') {
+        s.push_back(c);
+      }
+    }
+
+    if (last == '%' && c == '%')
+      last = 'x';
+    else
+      last = c;
+  }
+  if (iter->xcm_more_()) {
+    die("Too many arguments to string format");
+  }
+  return new xcs_String(s);
+}
 
 xct_List<xct_String> xcs_String::xcmwords() const {
   xct_List<xct_String> words(new xcs_List<xct_String>({}));

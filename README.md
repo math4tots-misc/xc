@@ -79,6 +79,8 @@ Classes
     * \_repr\_[] String
   * Iterable(T)
     * \_iter\_[] Iterator(T)
+    * map(F)[F] Iterable(ResultOf(F, T))
+    * list[] List(T)
   * Iterator(T) < Iterable(T)
     * \_iter\_[] Iterator(T)
     * \_more\_[] Bool
@@ -86,10 +88,11 @@ Classes
   * String
     * \_repr\_[] String
     * \_add\_[String] String
-    * \_mod\_(T)[List(T)] String
+    * \_mod\_[Iterable(String)] String
     * \_hash\_[] Int
     * lines[] List(String)
     * words[] List(String)
+    * join[Iterable(String)] String
   * ListIterator(T) < Iterator(T)
   * List(T) < Iterable(T)
     * \_repr\_[] String
@@ -100,7 +103,7 @@ Classes
     * pop[] T
     * get[Int] T
     * set[Int, T] List(T)
-    * map(F)[F] ResultOf(F, T)
+    * map(F)[F] List(ResultOf(F, T))
   * MapIterator(K,V) < Iterator(K)
   * Map(K, V) < Iterable(K)
     * \_repr\_[] String
@@ -128,6 +131,7 @@ Functions
   * trace[] String
   * int[String] Int
   * float[String] Float
+  * list(T)[Iterable(T)] List(T)
 
 Non-language core stuff
 
@@ -186,7 +190,8 @@ Classes
 
 ## TODO
 
-  * String.\_mod\_
+  * Syntax for casting types (dynamic cast)
+  * String.join
   * List(T).\_hash\_
   * Map(K,V).\_hash\_
 
@@ -247,6 +252,8 @@ Classes
     Seems like it'd be straight forward with C++ local variables.
     But this is lower on my priorities right now.
 
+  * Consider tuple types.
+
 ### Finished TODOs
 
   * Something like C++11's 'using' or typedef where types can be aliased.
@@ -267,3 +274,5 @@ Classes
 
   * String.words
   * String.lines
+  * String.\_mod\_
+
