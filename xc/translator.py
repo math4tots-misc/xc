@@ -80,6 +80,10 @@ class Translator(object):
         a += x
         b += y
         d += z
+      elif self.at('interface'):
+        x, y = self.parse_interface()
+        a += x
+        b += y
       elif self.at('var'):
         c += self.parse_global_declaration()
       elif self.at('using'):
@@ -144,6 +148,13 @@ class Translator(object):
       base = self.parse_type() + '::Pointee'
     else:
       base = 'xcs_Object'
+    if self.consume(':'):
+      ifs = []
+      while not self.at('{'):
+        ifs.append(self.parse_type() + '::Pointee')
+      ifs = ''.join(', virtual ' + f for f in ifs)
+    else:
+      ifs = ''
     self.base_class_name = base
     attrs = []
     decls = []
@@ -159,20 +170,76 @@ class Translator(object):
       else:
         raise err.Err('Expected attribute or method', self.peek())
     if typeargs is None:
-      b = '\nstruct xcs_%s: %s\n{%s%s\n};' % (
-          name, base,
+      b = '\nstruct xcs_%s: virtual %s%s\n{%s%s\n};' % (
+          name, base, ifs,
           ''.join(attrs).replace('\n', '\n  '),
           ''.join(decls).replace('\n', '\n  '))
     else:
-      b = '\ntemplate <%s>\nstruct xcs_%s: %s\n{%s%s\n};' % (
-          typeargs,
-          name, base,
+      b = '\ntemplate <%s>\nstruct xcs_%s: %s%s\n{%s%s\n};' % (
+          typeargs, name, base, ifs,
           ''.join(attrs).replace('\n', '\n  '),
           ''.join(decls).replace('\n', '\n  '))
     c = ''.join(defns)
     self.class_name_prefix = ''
     self.base_class_name = ''
     return a, b, c
+
+  def parse_interface(self):
+    self.expect('interface')
+    name = self.expect('ID').value
+    if self.at('('):
+      typeargs = self.parse_typearg_sig()
+      # TODO: Don't do this hack. Figure out a cleaner solution.
+      # TODO: Stop duplicating this evil hack.
+      typeargnames = ', '.join(
+          name for name in typeargs.replace(',', ' ').split()
+          if name != 'class')
+      a = ((
+          '\ntemplate <%s> struct xcs_%s;' +
+          '\ntemplate <%s> using xct_%s = SharedPtr<xcs_%s<%s>>;') % (
+              typeargs, name,
+              typeargs, name, name, typeargnames))
+    else:
+      typeargs = None
+      a = '\nstruct xcs_%s;\nusing xct_%s = SharedPtr<xcs_%s>;' % (
+          name, name, name)
+
+    if self.consume(':'):
+      ifs = []
+      while not self.at('{'):
+        ifs.append(self.parse_type() + '::Pointee')
+      ifs = ', '.join('virtual ' + f for f in ifs)
+    else:
+      ifs = 'virtual xcs_Object'
+
+    methods = []
+    self.expect('{')
+    while not self.consume('}'):
+      self.expect('fn')
+      fname = self.expect('ID').value
+      args = []
+      self.expect('[')
+      while not self.consume(']'):
+        aname = self.expect('ID').value
+        t = self.parse_type()
+        args.append('%s xcv_%s' % (t, aname))
+      ret = 'xct_Void'
+      if self.at('ID'):
+        ret = self.parse_type()
+      methods.append('\nvirtual %s xcm%s(%s)=0;' % (
+          ret, fname, ', '.join(args)))
+
+    if typeargs is None:
+      b = '\nstruct xcs_%s: %s\n{%s\n};' % (
+          name, ifs,
+          ''.join(methods).replace('\n', '\n  '))
+    else:
+      b = '\ntemplate <%s>\nstruct xcs_%s: %s\n{%s\n};' % (
+          typeargs, name, ifs,
+          ''.join(methods).replace('\n', '\n  '))
+
+    return a, b
+
 
   def parse_attribute(self):
     self.expect('var')

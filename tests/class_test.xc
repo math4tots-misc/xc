@@ -8,6 +8,10 @@ fn main[] {
   assert[
       ac.method[] ==
       'Inside ExampleClass constructor -- and now in ExampleClass.method!']
+
+  var eim ExampleInterface = new ExampleImpl[]
+  assert[eim.bar[4] == 5.5, eim.bar[4]]
+
   print['pass']
 }
 
@@ -32,3 +36,13 @@ class ExampleClass {
 }
 
 class AnotherClass < ExampleClass {}
+
+interface ExampleInterface {
+  fn foo[]
+  fn bar[i Int] Float
+}
+
+class ExampleImpl: ExampleInterface {
+  fn foo[] {}
+  fn bar[i Int] Float { return 5.5 }
+}

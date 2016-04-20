@@ -115,6 +115,7 @@ struct SharedPtr {
   typedef T Pointee;
 
   SharedPtr(): ptr(nullptr) {}
+
   SharedPtr(T* p): ptr(p) { ptr->increment_refcnt(); }
 
   template <class K>
@@ -842,10 +843,12 @@ xct_StdoutWriter xcv_stdout(new xcs_StdoutWriter);
 void print_trace() {
   std::cout << make_trace_message();
 }
-xct_Void xcv_assert(xct_Bool cond, xct_String message) {
+
+template <class T>
+xct_Void xcv_assert(xct_Bool cond, T message) {
   if (!cond) {
     print_trace();
-    std::cout << "AssertionError: " << message->data << std::endl;
+    std::cout << "AssertionError: " << xcv_repr(message)->data << std::endl;
     exit(1);
   }
   RETURN_VOID;
