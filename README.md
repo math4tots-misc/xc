@@ -190,6 +190,19 @@ Classes
 
 ## TODO
 
+  * I realized that the way that I generate stack traces depends on undefined
+    behavior that just happens to work on OS X.
+    I need to figure out a standards compliant way to force the Frame object
+    to be created before evaluating the expressions within it.
+    One possible way might be to wrap every expression in a lambda expression
+    and call it in the body of the 'with' method.
+    Of course this would probably add a lot of overhead to non-optimized
+    binaries.
+    Furthermore, I need to figure out the return type of this temporary
+    lambda function I'm going to wrap every expression in.
+    Since they are all just expressions, it might be possible to
+    wrap them in a 'decltype'.
+
 ### Not directly actionable TODOs, but just feelings
 
   * Keep these TODOs prioritized.
