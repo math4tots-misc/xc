@@ -32,15 +32,6 @@ class RangeIterator {
     self.i += 1
     return self.i - 1
   }
-
-  # TODO: Figure out how I need to extend the type system to make
-  # 'map' work.
-  #fn map(F)[f F] List(%F[Int]) {
-  #  var xs = new List(Int)[]
-  #  for i in self {
-  #    xs.push[]
-  #  }
-  #}
 }
 
 fn range[start Int, end Int] Range {

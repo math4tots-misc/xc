@@ -2,10 +2,10 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-if [ "$#" -eq 1 ]; then
-  xc "$ROOT"/tests/"$1"_test.xc "${@:2}" -o a.out && ./a.out || exit 1
-else
+if [ "$#" -eq 0 ]; then
   for t in "$ROOT"/tests/*.xc; do
-    xc $t "$@" -o a.out && ./a.out || exit 1
+    xc $t "$@" -O0 -o a.out && ./a.out || exit 1
   done
+else
+  xc "$ROOT"/tests/"$1"_test.xc -o a.out "${@:2}" && ./a.out || exit 1
 fi

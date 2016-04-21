@@ -64,5 +64,13 @@ fn main[] {
     var result = list._iter_[].map[fn[i Int] Int { return 7 * i }]
     assert[result.list[] == $Int[35, 42, 49, 56]]
   }
+  {
+    var list = $Int[1, 2, 3, 4, 5, 6]
+    var result = list._iter_[]
+        .filter[fn[i Int] Bool {
+          return i >= 4
+        }].list[]
+    assert[result == $Int[4, 5, 6], repr[result]]
+  }
   print['pass']
 }

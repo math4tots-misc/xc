@@ -350,6 +350,8 @@ struct xcs_Iterable: virtual xcs_Object {
   template <class F>
   xct_Iterator<ResultOf<F, T>> xcmmap(F f);
 
+  xct_Iterator<T> xcmfilter(std::function<xct_Bool(T)> f);
+
   xct_List<T> xcmlist();
 };
 
@@ -380,9 +382,47 @@ struct MapResult final: virtual xcs_Iterator<ResultOf<F,T>> {
 };
 
 template <class T>
+struct FilterResult final: virtual xcs_Iterator<T> {
+  xct_Iterator<T> iter;
+  std::function<xct_Bool(T)> f;
+  xct_Bool more;
+  T next;
+
+  FilterResult(xct_Iterator<T> iter, std::function<xct_Bool(T)> f):
+      iter(iter), f(f), more(false) {
+    readynext();
+  }
+
+  xct_Bool xcm_more_() override {
+    return more;
+  }
+
+  T xcm_next_() override {
+    T n = next;
+    readynext();
+    return n;
+  }
+
+private:
+  void readynext() {
+    more = false;
+    while (iter->xcm_more_() && !more) {
+      next = iter->xcm_next_();
+      if (f(next))
+        more = true;
+    }
+  }
+};
+
+template <class T>
 template <class F>
 xct_Iterator<ResultOf<F, T>> xcs_Iterable<T>::xcmmap(F f) {
   return new MapResult<T, F>(xcm_iter_(), f);
+}
+
+template <class T>
+xct_Iterator<T> xcs_Iterable<T>::xcmfilter(std::function<xct_Bool(T)> f) {
+  return new FilterResult<T>(xcm_iter_(), f);
 }
 
 struct xcs_String final: xcs_Object {
