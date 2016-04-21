@@ -346,6 +346,9 @@ struct xcs_Object: Root {
 template <class T>
 struct xcs_Iterable: virtual xcs_Object {
   virtual xct_Iterator<T> xcm_iter_()=0;
+
+  template <class F>
+  xct_Iterator<ResultOf<F, T>> xcmmap(F f);
 };
 
 template <class T>
@@ -356,6 +359,29 @@ struct xcs_Iterator: virtual xcs_Iterable<T> {
     return this;
   }
 };
+
+template<class T, class F>
+struct MapResult final: virtual xcs_Iterator<T> {
+  xct_Iterator<T> iter;
+  F f;
+
+  MapResult(xct_Iterator<T> iter, F f):
+      iter(iter), f(f) {}
+
+  xct_Bool xcm_more_() override {
+    return iter->xcm_more_();
+  }
+
+  T xcm_next_() override {
+    return f(iter->xcm_next_());
+  }
+};
+
+template <class T>
+template <class F>
+xct_Iterator<ResultOf<F, T>> xcs_Iterable<T>::xcmmap(F f) {
+  return new MapResult<T, F>(xcm_iter_(), f);
+}
 
 struct xcs_String final: xcs_Object {
   const std::string data;

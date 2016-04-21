@@ -46,5 +46,18 @@ fn main[] {
     items.sort[]
     assert[items == $String['a', 'b', 'c', 'd'], repr[items]]
   }
+  {
+    var list = $Int[5, 6, 7, 8]
+    var result = list._iter_[].map[fn[i Int] Int { return 7 * i }]
+    assert[result._more_[]]
+    assert[result._next_[] == 35]
+    assert[result._more_[]]
+    assert[result._next_[] == 42]
+    assert[result._more_[]]
+    assert[result._next_[] == 49]
+    assert[result._more_[]]
+    assert[result._next_[] == 56]
+    assert[not result._more_[]]
+  }
   print['pass']
 }
