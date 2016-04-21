@@ -44,7 +44,8 @@ PREFIX_2B = r"""
 // TODO: Figure out a better solution.
 typedef std::nullptr_t xct_Void;
 #define RETURN_VOID return nullptr
-#define WITH_FRAME(msg, ln, msg2, expr) (Frame(msg, ln, msg2).with(expr))
+#define WITH_FRAME(msg, ln, msg2, expr) \
+    (Frame::push(msg, ln, msg2), Frame::pop(expr))
 struct Frame;
 static std::vector<Frame*> trace;
 struct Frame {
@@ -52,15 +53,18 @@ struct Frame {
   int lineno;
   const char* msg2;
   Frame(const char* msg, int lineno, const char* msg2):
-      msg(msg), lineno(lineno), msg2(msg2) {
-    trace.push_back(this);
+      msg(msg), lineno(lineno), msg2(msg2) {}
+  ~Frame() {}
+
+  static void push(const char* msg, int lineno, const char* msg2) {
+    trace.push_back(new Frame(msg, lineno, msg2));
   }
-  ~Frame() {
-    trace.pop_back();
-  }
+
   template <class T>
-  T with(T expr) {
-    return expr;
+  static T pop(T t) {
+    delete trace.back();
+    trace.pop_back();
+    return t;
   }
 };
 std::string make_trace_message() {
