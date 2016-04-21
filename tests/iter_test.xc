@@ -59,5 +59,10 @@ fn main[] {
     assert[result._next_[] == 56]
     assert[not result._more_[]]
   }
+  {
+    var list = $Int[5, 6, 7, 8]
+    var result = list._iter_[].map[fn[i Int] Int { return 7 * i }]
+    assert[result.list[] == $Int[35, 42, 49, 56]]
+  }
   print['pass']
 }

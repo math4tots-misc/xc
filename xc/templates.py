@@ -349,6 +349,8 @@ struct xcs_Iterable: virtual xcs_Object {
 
   template <class F>
   xct_Iterator<ResultOf<F, T>> xcmmap(F f);
+
+  xct_List<T> xcmlist();
 };
 
 template <class T>
@@ -587,6 +589,15 @@ struct xcs_List final: xcs_Iterable<T> {
     return seed;
   }
 };
+
+template <class T>
+xct_List<T> xcs_Iterable<T>::xcmlist() {
+  xct_List<T> list(new xcs_List<T>());
+  for (T t: IterableSharedPtr<xcs_Iterable<T>>(this)) {
+    list->xcmpush(t);
+  }
+  return list;
+}
 
 xct_List<xct_String> xcs_String::xcmwords() const {
   xct_List<xct_String> words(new xcs_List<xct_String>({}));
