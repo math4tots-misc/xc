@@ -1,6 +1,11 @@
 #!/bin/bash
+
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-for t in "$ROOT"/tests/*.xc; do
-  xc $t "$@" -o a.out && ./a.out || exit 1
-done
+if [ "$#" -eq 1 ]; then
+  xc "$ROOT"/tests/"$1"_test.xc "${@:2}" -o a.out && ./a.out || exit 1
+else
+  for t in "$ROOT"/tests/*.xc; do
+    xc $t "$@" -o a.out && ./a.out || exit 1
+  done
+fi

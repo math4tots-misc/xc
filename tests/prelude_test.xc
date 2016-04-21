@@ -36,19 +36,19 @@ fn main[] {
   var xs = $Int[1, 2, 3]
   assert[str[xs] == "[1, 2, 3]", "str list"]
 
-  assert[$String["4", "5", "75"].map[int] == $Int[4, 5, 75]]
+  assert[$String["4", "5", "75"].map[int].list[] == $Int[4, 5, 75]]
 
   assert[$Int[1, 2, 3].map[fn[i Int] Int {
     return 2 * i + 1
-  }] == $Int[3, 5, 7]]
+  }].list[] == $Int[3, 5, 7]]
 
   var f = fn[i Int] Int {
     return 2 * i * i + 17
   }
-  assert[$Int[5, 6, 7].map[f] == $Int[67, 89, 115]]
+  assert[$Int[5, 6, 7].map[f].list[] == $Int[67, 89, 115]]
 
   var g = int
-  assert[$String["5", "6", "7"].map[g] == $Int[5, 6, 7]]
+  assert[$String["5", "6", "7"].map[g].list[] == $Int[5, 6, 7]]
 
   var z String
   var a String

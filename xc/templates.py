@@ -363,7 +363,7 @@ struct xcs_Iterator: virtual xcs_Iterable<T> {
 };
 
 template<class T, class F>
-struct MapResult final: virtual xcs_Iterator<T> {
+struct MapResult final: virtual xcs_Iterator<ResultOf<F,T>> {
   xct_Iterator<T> iter;
   F f;
 
@@ -374,7 +374,7 @@ struct MapResult final: virtual xcs_Iterator<T> {
     return iter->xcm_more_();
   }
 
-  T xcm_next_() override {
+  ResultOf<F,T> xcm_next_() override {
     return f(iter->xcm_next_());
   }
 };
@@ -557,16 +557,6 @@ struct xcs_List final: xcs_Iterable<T> {
 
   xct_Bool xcm_eq_(xct_List<T> p) const {
     return data == p->data;
-  }
-
-  template <class F>
-  auto xcmmap(F f) -> xct_List<ResultOf<F,T>> {
-    using K = ResultOf<F,T>;
-    xct_List<K> result(new xcs_List<K>());
-    for (T t: data) {
-      result->xcmpush(f(t));
-    }
-    return result;
   }
 
   xct_List<T> xcmsort() {
