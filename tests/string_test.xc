@@ -3,18 +3,26 @@ fn main[] {
   var words List(String)
   var lines List(String)
 
-  assert[(words =''.words[]) == $String[], repr[words]]
-  assert[(words = 'ab c'.words[]) == $String['ab', 'c'], repr[words]]
-  assert[(words = 'def'.words[]) == $String['def'], repr[words]]
-  assert[(words = ' def '.words[]) == $String['def'], repr[words]]
-  assert[(words = 'def '.words[]) == $String['def'], repr[words]]
-  assert[
-      (words = '  wirh 89 .fw'.words[]) == $String["wirh", "89", ".fw"],
-      repr[words]]
-  assert[
-      (words = 'wirh 89 .fw  '.words[]) == $String["wirh", "89", ".fw"],
-      repr[words]]
+  words = ''.words[]
+  assert[words == $String[], repr[words]]
 
+  words = 'ab c'.words[]
+  assert[words == $String['ab', 'c'], repr[words]]
+
+  words = 'def'.words[]
+  assert[words == $String['def'], repr[words]]
+
+  words = ' def '.words[]
+  assert[words == $String['def'], repr[words]]
+
+  words = 'def '.words[]
+  assert[words == $String['def'], repr[words]]
+
+  words = '  wirh 89 .fw'.words[]
+  assert[words == $String["wirh", "89", ".fw"], repr[words]]
+
+  words = 'wirh 89 .fw  '.words[]
+  assert[words == $String["wirh", "89", ".fw"], repr[words]]
 
   var text = r"""
 a b c d
@@ -22,23 +30,23 @@ a b c d
 83/uoi.LKFJ 3940
 """
 
+  words = text.words[]
   assert[
-      (words = text.words[]) ==
+      words ==
       $String["a", "b", "c", "d", "asdf", "fghj", "83/uoi.LKFJ", "3940"],
       repr[words]]
 
+  lines = text.lines[]
   assert[
-      (lines = text.lines[]) ==
+      text.lines[] ==
       $String["a b c d", "  asdf fghj", "83/uoi.LKFJ 3940"],
       repr[lines]]
 
 
   {
     var format = "%s %% %s %%"
-    var s String
-    assert[
-        (s = format % $String['hi', 'there']) ==
-        "hi % there %", '%: ' + s]
+    var s String = format % $String['hi', 'there']
+    assert[s == "hi % there %", '%: ' + s]
 
     assert['%s%s' % $String['hello', 'world'] == 'helloworld', '%2']
   }
