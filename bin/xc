@@ -25,6 +25,7 @@ def main():
 
   if not len(args):
     print('Usage: %s <xc_source> [-[no]trace] [g++ options...]' % binname)
+    exit(1)
 
   # 2. Translate
   os.environ['PYTHONPATH'] = os.pathsep.join((
