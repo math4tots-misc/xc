@@ -41,7 +41,7 @@ def main():
   # 3. Compile
   gccopts = args[1:]
   code = subprocess.call([
-      'g++', '--std=c++11', '-Wall', '-Werror', '-Wpedantic',
+      'g++', '--std=c++11', '-Wall', '-Werror', '-Wpedantic', '-O3',
       acc] + gccopts)
   if code:
     print('compilation failed')
