@@ -1,71 +1,64 @@
-var stuff = new List(String)[]
+fn g[i Int] Int {
+  return f[i - 1]
+}
 
-fn main[] {
-  var g = fn[] {
-    stuff.push[trace[]]
-  }
-  g[]
-  f[]
-  var s = new Sample[]
-  s.foo[]
-  s.rec[0]
-
-  for item in stuff {
-    print[item]
+fn f[i Int] Int {
+  if i == 1 {
+    return g[i]
+  } else {
+    return i
   }
 }
 
-fn f[] {
-  stuff.push[trace[]]
+fn h[] {
+  print['hi!']
 }
 
 class Sample {
+
   fn[] {
-    stuff.push[trace[]]
+    print['Inside Sample constructor!']
   }
 
-  fn foo[] {
-    stuff.push[trace[]]
+  fn method[] Int {
+    return 5
   }
 
-  fn rec[i Int] {
-    if i == 10 {
-      stuff.push[trace[]]
-    } else {
-      self.rec[i+1]
-    }
+  fn mmstr[] String {
+    return '<Sample>'
   }
 }
 
-var expected = r"""
-Kyumins-MacBook-Pro:xc math4tots$ xc test.xc && ./a.out
-Traceback (most recent call last):
-  File "test.xc", line 7 in main
-  File "test.xc", line 5 in <anonymous>
+var x Int = 5
 
-Traceback (most recent call last):
-  File "test.xc", line 8 in main
-  File "test.xc", line 19 in f
+fn outer[] {
+  print["hello\nworld"]
+  var i = 5532
+  print[i]
+  var s = Sample[]
+  # print[s.method[]]
+  print['end outer']
+}
 
-Traceback (most recent call last):
-  File "test.xc", line 9 in main
-  File "test.xc", line 24 in Sample.<constructor>
+fn main[] {
+  outer[]
+  print['end main']
+  h[]
+  print[x]
+  x += 1
+  print[x]
+  for i in range[10, 20] {
+    print[i]
+  }
 
-Traceback (most recent call last):
-  File "test.xc", line 10 in main
-  File "test.xc", line 28 in Sample.foo
+  for i in $[5, 7, 22] {
+    print[i]
+  }
 
-Traceback (most recent call last):
-  File "test.xc", line 11 in main
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 35 in Sample.rec
-  File "test.xc", line 33 in Sample.rec
-"""
+  var t = T[57, "hi", Sample[]]
+  print[t]
+
+  print[$[1, 2, 3, 77]]
+
+  print[ARGS]
+}
