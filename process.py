@@ -103,7 +103,7 @@ symbols = tuple(reversed(sorted((
     '+=', '-=', '*=', '/=', '%='))))
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
-    'var', 'include', 'extern', 'new', 'as',
+    'var', 'include', 'extern', 'new', 'as', 'let',
     'class', 'for', 'in', 'is', 'not', 'and', 'or')
 whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
@@ -188,6 +188,9 @@ class Parser(object):
     self.tokens = lex(source)
     self.i = 0
     self.make_trace = make_trace
+
+    # Temporary variable counter
+    self.tmpvari = 1
 
     # Context vars for creating trace messages
     self.cls = ''
@@ -318,8 +321,26 @@ class Parser(object):
       return '\nbreak;'
     elif self.consume('continue'):
       return '\ncontinue;'
+    elif self.consume('let'):
+      names = []
+      while not self.consume('='):
+        names.append(self.expect('ID').value)
+        self.consume(',')
+      tupleexpr = self.parse_value_expression()
+      tmpvar = self.make_tmpvar()
+      assigns = []
+      for i, name in enumerate(names):
+        if name != '_':
+          assigns.append('\nauto vv%s = std::get<%d>(%s);' % (
+              name, i, tmpvar))
+      return '\nauto %s = %s;%s' % (tmpvar, tupleexpr, ''.join(assigns))
     else:
       return '\n%s;' % self.parse_void_expression()
+
+  def make_tmpvar(self):
+    vn = 'tmpvar%d' % self.tmpvari
+    self.tmpvari += 1
+    return vn
 
   def parse_if(self):
     self.expect('if')

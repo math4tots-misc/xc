@@ -83,6 +83,11 @@ fn main[] {
   {
     var x Any = 5
     print[x as Int]
+
+    let a, b = T[173, 'hi foobar']
+    print[a]
+    print[b]
+
     have_an_err[]
   }
 }
