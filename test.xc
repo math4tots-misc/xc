@@ -61,4 +61,14 @@ fn main[] {
   print[$[1, 2, 3, 77]]
 
   print[ARGS]
+
+  stdout.write['hello world!\n']
+  #var line = stdin.input[]
+  #print[line]
+
+  # var fw = FileWriter['blarg.txt']
+  # fw.write['hi\n']
+
+  var fin = FileReader['blarg.txt']
+  print[fin.input[]]
 }

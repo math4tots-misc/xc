@@ -27,6 +27,11 @@ Builtin types,
   Set(T)
   Function(R, Args...)
 
+  FileReader
+    read from a file/stdin.
+  FileWriter
+    write to a file/stdout.
+
 Only builtin types can be generics. User defined types or functions
 may not be generic.
 

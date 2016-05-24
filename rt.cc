@@ -2,6 +2,7 @@
 // Needs C++14 features
 ////// BEGIN prelude
 #include <iostream>
+#include <fstream>
 #include <functional>
 #include <type_traits>
 #include <initializer_list>
@@ -272,11 +273,61 @@ PPTuple<A...> vvT(A... args) {
   return PPTuple<A...>(args...);
 }
 
-// print
-template <class T>
-void vvprint(const T& t) {
-  std::cout << t << std::endl;
+class CCFileWriter final: public CCObject {
+public:
+  CCFileWriter(const std::string& filename):
+      destroy(true), out(new std::ofstream(filename)) {}
+  CCFileWriter(): destroy(false), out(&std::cout) {}
+  ~CCFileWriter() { if (destroy) { delete out; } }
+  CCFileWriter(const CCFileWriter& w) = delete;
+  CCFileWriter& operator=(const CCFileWriter& w) = delete;
+
+  template <class T>
+  void mmwrite(T t) {
+    (*out) << t;
+  }
+
+  template <class T>
+  void mmprint(T t) {
+    mmwrite(t);
+    (*out) << std::endl;
+  }
+
+private:
+  const bool destroy;  // indicates whether we should destory the ostream.
+  std::ostream* out;
+};
+typedef P<CCFileWriter> PPFileWriter;
+PPFileWriter vvstdout(new CCFileWriter());
+inline PPFileWriter vvFileWriter(PPString filename) {
+  return new CCFileWriter(filename->str());
 }
+
+class CCFileReader final: public CCObject {
+public:
+  CCFileReader(const std::string& filename):
+    destroy(true), fin(new std::ifstream(filename)) {}
+  CCFileReader(): destroy(false), fin(&std::cin) {}
+  ~CCFileReader() { if (destroy) { delete fin; } }
+
+  PPString mminput() {
+    std::string s;
+    std::getline(*fin, s);
+    return new CCString(s);
+  }
+private:
+  const bool destroy;  // indicates whether we should destroy the istream.
+  std::istream* fin;
+};
+typedef P<CCFileReader> PPFileReader;
+PPFileReader vvstdin(new CCFileReader());
+inline PPFileReader vvFileReader(PPString filename) {
+  return new CCFileReader(filename->str());
+}
+
+// print/input
+template <class T> void vvprint(const T& t) { vvstdout->mmprint(t); }
+PPString vvinput() { return vvstdin->mminput(); }
 
 PPVector<PPString> vvARGS(new CCVector<PPString>({}));
 
