@@ -71,4 +71,9 @@ fn main[] {
 
   var fin = FileReader['blarg.txt']
   print[fin.input[]]
+
+  {
+    var x Any = 5
+    print[x as Int]
+  }
 }

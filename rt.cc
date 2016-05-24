@@ -14,23 +14,27 @@
 #include <algorithm>
 #include <tuple>
 
+//-- Part 1: defines
 #define vvnil nullptr
 #define vvself this
 #define vvtrue true
 #define vvfalse false
 
+//-- Part 2: P
 class CCObject;
-
 template <class T>
 class P {
 public:
   static_assert(std::is_base_of<CCObject, T>::value, "Must subclass Object");
-  P(): ptr(nullptr) {}
+  typedef T value_type;
+  constexpr P(): ptr(nullptr) {}
   P(T* p): ptr(p) { incr(); }
   P(const P& p): P(p.ptr) {}
   ~P() { decr(); }
   P& operator=(const P& p) { p.incr(); decr(); ptr = p.ptr; return *this; }
+  T* getptr() const { return ptr; }
   T* operator->() const { return ptr; }
+  void clear() { decr(); ptr = nullptr; }
   template <class K> auto operator==(K k) const { return ptr->mmmmeq(k); }
   template <class K> auto operator!=(K k) const { return ptr->mmmmne(k); }
   template <class K> auto operator<(K k) const { return ptr->mmmmlt(k); }
@@ -49,9 +53,10 @@ private:
   T* ptr;
 };
 
+//-- Part 3: CCObject
 class CCObject {
 public:
-  CCObject(): refcnt(0) {}
+  constexpr CCObject(): refcnt(0) {}
   virtual ~CCObject() {}
 private:
   int refcnt;
@@ -60,24 +65,31 @@ private:
   template <class T> friend class P;
 };
 
+//-- Part 4: Primitive type aliases
 typedef void PPVoid;
 typedef bool PPBool;
 typedef char PPChar;
-typedef long PPInt;
+typedef long long PPInt;
 typedef double PPFloat;
 template <class... T> using PPTuple = std::tuple<T...>;
 template <class R, class... A> using PPFunction = std::function<R(A...)>;
 
+//-- Part 5: Tupleobject
 template <class... T>
 class CCTupleObject final: public CCObject {
 public:
   CCTupleObject(const PPTuple<T...>& v): value(v) {}
   CCTupleObject(const CCTupleObject<T...>& v): value(v.value) {}
-private:
-  PPTuple<T...> value;
+  const PPTuple<T...> value;
 };
 template <class... T> using PPTupleObject = CCTupleObject<T...>;
+// make Tuple
+template <class... A>
+PPTuple<A...> vvT(A... args) {
+  return PPTuple<A...>(args...);
+}
 
+//-- Part 6: Any
 class PPAny final {
 public:
   static constexpr int POINTER = 0;
@@ -85,52 +97,54 @@ public:
   static constexpr int CHAR = 2;
   static constexpr int INT = 3;
   static constexpr int FLOAT = 4;
-  PPAny(): type(POINTER) {}
-  template <class T> PPAny(const T& value) { assign(value); }
-  template <class T>
-  PPAny& operator=(const T& value) {
-    assign(value);
-    return *this;
-  }
-
-private:
-
-  template <class T>
-  void assign(P<T> p) {
-    type = POINTER;
-    pointer = p;
-  }
-
+  constexpr PPAny(): type(POINTER), boolean(false) {}
+  constexpr PPAny(PPBool b): type(BOOL), boolean(b) {}
+  constexpr PPAny(PPChar b): type(CHAR), character(b) {}
+  constexpr PPAny(PPInt b): type(INT), integer(b) {}
+  constexpr PPAny(PPFloat b): type(FLOAT), floating(b) {}
+  template <class T> PPAny(P<T> value):
+      type(POINTER), pointer(value.getptr()), boolean(false) {}
+  PPAny& operator=(PPBool b) { type = BOOL; boolean = b; return *this; }
+  PPAny& operator=(PPChar b) { type = CHAR; character = b; return *this; }
+  PPAny& operator=(PPInt b) { type = INT; integer = b; return *this; }
+  PPAny& operator=(PPFloat b) { type = FLOAT; floating = b; return *this; }
   template <class... T>
-  void assign(PPTuple<T...> t) {
+  PPAny& operator=(PPTuple<T...> t) {
     type = POINTER;
     pointer = new CCTupleObject<T...>(t);
+    return *this;
   }
-
-  void assign(PPBool c) {
-    type = BOOL;
-    boolean = c;
-    pointer = nullptr;
+  template <class T>
+  PPAny& operator=(P<T> p) {
+    type = POINTER;
+    pointer = p.getptr();
+    return *this;
   }
-
-  void assign(PPChar c) {
-    type = CHAR;
-    character = c;
-    pointer = nullptr;
+  PPBool as_bool() const {
+    if (type != BOOL) {
+      throw "Not an bool";  // TODO: Better error handling
+    }
+    return boolean;
   }
-
-  void assign(PPInt c) {
-    type = INT;
-    integer = c;
-    pointer = nullptr;
+  PPChar as_char() const {
+    if (type != CHAR) {
+      throw "Not an char";  // TODO: Better error handling
+    }
+    return character;
   }
-
-  void assign(PPFloat c) {
-    type = FLOAT;
-    floating = c;
-    pointer = nullptr;
+  PPInt as_int() const {
+    if (type != INT) {
+      throw "Not an int";  // TODO: Better error handling
+    }
+    return integer;
   }
-
+  PPFloat as_float() const {
+    if (type != FLOAT) {
+      throw "Not an float";  // TODO: Better error handling
+    }
+    return floating;
+  }
+private:
   int type;
   P<CCObject> pointer;
   union {
@@ -141,6 +155,7 @@ private:
   };
 };
 
+//-- Part 7: String
 class CCString;
 typedef P<CCString> PPString;
 class CCString final: public CCObject {
@@ -155,7 +170,7 @@ private:
   const std::string s;
 };
 
-// repr
+//-- Part 8: repr
 template <class T>
 std::string repr(T t) {
   std::stringstream ss;
@@ -190,9 +205,14 @@ std::string repr<PPChar>(PPChar ppc) {
   return "'" + sanitize_char(ppc) + "'";
 }
 
+template <class T>
+PPString vvrepr(T t) {
+  return new CCString(repr(t));
+}
+
+//-- Part 9: Vector
 template <class T> class CCVector;
 template <class T> using PPVector = P<CCVector<T>>;
-
 template <class T>
 class CCVector final: public CCObject {
 public:
@@ -221,18 +241,12 @@ private:
   std::vector<T> v;
 };
 
-// make Vector
 template <class T>
-PPVector<T> V(std::initializer_list<T> args) {
+PPVector<T> make_vector(std::initializer_list<T> args) {
   return new CCVector<T>(args);
 }
 
-template <class T>
-PPString vvrepr(T t) {
-  return new CCString(repr(t));
-}
-
-// Tuple out stream
+//-- Part 10: stream out overloads/str.
 template <class Tuple, int I>
 struct TupleWriteHelper {
   static void write(std::ostream& out, const Tuple& t) {
@@ -267,12 +281,12 @@ std::ostream& operator<<(std::ostream& out, const P<T>& t) {
   return out << t->mmmmstr();
 }
 
-// make Tuple
-template <class... A>
-PPTuple<A...> vvT(A... args) {
-  return PPTuple<A...>(args...);
+template <class T>
+PPString vvstr(T t) {
+  return new CCString(t);
 }
 
+//-- Part 11: FileWriter/FileReader and input/print
 class CCFileWriter final: public CCObject {
 public:
   CCFileWriter(const std::string& filename):
@@ -325,10 +339,10 @@ inline PPFileReader vvFileReader(PPString filename) {
   return new CCFileReader(filename->str());
 }
 
-// print/input
 template <class T> void vvprint(const T& t) { vvstdout->mmprint(t); }
 PPString vvinput() { return vvstdin->mminput(); }
 
+//-- Part 12: ARGS and main.
 PPVector<PPString> vvARGS(new CCVector<PPString>({}));
 
 void vvmain();

@@ -92,7 +92,7 @@ symbols = tuple(reversed(sorted((
     '+=', '-=', '*=', '/=', '%='))))
 keywords = (
     'fn', 'return', 'if', 'else', 'while', 'break', 'continue',
-    'var', 'include', 'extern', 'new',
+    'var', 'include', 'extern', 'new', 'as',
     'class', 'for', 'in', 'is', 'not', 'and', 'or')
 whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
@@ -373,8 +373,7 @@ class Parser(object):
     while True:
       if self.at('(') or self.at('['):  # ] )
         e = '%s%s' % (e, self.parse_args())
-        continue
-      if self.consume('.'):
+      elif self.consume('.'):
         n = self.expect('ID').value
         if self.at('(') or self.at('['):  # ] )
           e = '%s->mm%s%s' % (e, n, self.parse_args())
@@ -392,8 +391,20 @@ class Parser(object):
           e = '(%s->aa%s %= %s)' % (e, n, self.parse_expression())
         else:
           e = '%s->aa%s' % (e, n)
-        continue
-      break
+      elif self.consume('as'):
+        type_ = self.parse_type()
+        if type_ == 'PPBool':
+          return '%s.as_bool()' % (e,)
+        if type_ == 'PPChar':
+          return '%s.as_char()' % (e,)
+        if type_ == 'PPInt':
+          return '%s.as_int()' % (e,)
+        if type_ == 'PPFloat':
+          return '%s.as_float()' % (e,)
+        else:
+          return '%s.as_p<%s>()' % (e, type_)
+      else:
+        break
     return e
 
   def parse_args(self, inps='[]', outs='()'):
@@ -441,7 +452,7 @@ class Parser(object):
       if self.at('ID'):
         t = '<%s>' % self.parse_type()
       if self.at('['):  # ]
-        return 'V%s(%s)' % (t, self.parse_args(outs='{}'))
+        return 'make_vector%s(%s)' % (t, self.parse_args(outs='{}'))
       elif self.at('{'):  # }
         return 'M%s(%s)' % (t, self.parse_args(inps='{}', outs='{}'))
       else:
