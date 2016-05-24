@@ -46,6 +46,17 @@ Caveats:
     For all primitive types besides Tuple, if a value is converted to Any,
     the Any object will not allocate any extra memory.
 
+  * Right now, when an exception is thrown and caught, not all the proper
+    frames are popped off the trace.
+    I think this can be fixed in the future with 'synchronizers'
+    declared on every block scope, but it's low on my priority because I
+    don't think catching exceptions is all that important in programming
+    contests.
+    This is why I have not included 'try/catch' syntax in the language.
+
+  * By default, manually generated stack traces are turned on, but you can
+    turn them off if this causes performance issues.
+
 """
 
 import re
@@ -172,10 +183,15 @@ def register_string(s):
 
 class Parser(object):
 
-  def __init__(self, source):
+  def __init__(self, source, make_trace):
     self.source = source
     self.tokens = lex(source)
     self.i = 0
+    self.make_trace = make_trace
+
+    # Context vars for creating trace messages
+    self.cls = ''
+    self.f = ''
 
     # Output vars
     self.includes = set()
@@ -228,7 +244,7 @@ class Parser(object):
           type_ = self.parse_type()
         value = ''
         if self.consume('='):
-          value = ' = ' + self.parse_expression()
+          value = ' = ' + self.parse_value_expression()
         if type_ != 'auto':
           self.decls += '\nextern %s %s;' % (type_, name)
         self.vardecls += '\n%s %s%s;' % (type_, name, value)
@@ -239,6 +255,7 @@ class Parser(object):
   def parse_function(self):
     self.expect('fn')
     name = 'vv' + self.expect('ID').value
+    self.f = name[2:]
     args = self.parse_argsigs()
     rettype = 'auto'
     if self.at('ID'):
@@ -275,7 +292,7 @@ class Parser(object):
     if self.at('{'):  # }
       return self.parse_block()
     elif self.consume('return'):
-      return '\nreturn %s;' % self.parse_expression()
+      return '\nreturn %s;' % self.parse_value_expression()
     elif self.consume('var'):
       name = 'vv' + self.expect('ID').value
       type_ = 'auto'
@@ -283,18 +300,18 @@ class Parser(object):
         type_ = self.parse_type()
       val = ''
       if self.consume('='):
-        val = ' = ' + self.parse_expression()
+        val = ' = ' + self.parse_value_expression()
       return '\n%s %s%s;' % (type_, name, val)
     elif self.at('if'):
       return self.parse_if()
     elif self.consume('while'):
-      cond = self.parse_expression()
+      cond = self.parse_value_expression()
       body = self.parse_block()
       return '\nwhile (%s)%s' % (cond, body)
     elif self.consume('for'):
       n = 'vv' + self.expect('ID').value
       self.expect('in')
-      cont = self.parse_expression()
+      cont = self.parse_value_expression()
       body = self.parse_block()
       return '\nfor (auto %s: %s)%s' % (n, cont, body)
     elif self.consume('break'):
@@ -302,11 +319,11 @@ class Parser(object):
     elif self.consume('continue'):
       return '\ncontinue;'
     else:
-      return '\n%s;' % self.parse_expression()
+      return '\n%s;' % self.parse_void_expression()
 
   def parse_if(self):
     self.expect('if')
-    cond = self.parse_expression()
+    cond = self.parse_value_expression()
     body = self.parse_block()
     other = ''
     if self.consume('else'):
@@ -315,6 +332,26 @@ class Parser(object):
       else:
         other = '\nelse' + self.parse_block()
     return '\nif (%s)%s%s' % (cond, body, other)
+
+  def parse_void_expression(self):
+    if self.make_trace:
+      return 'push_trace("%s", %d, "%s"), %s, pop_trace()' % (
+          self.source.filespec,
+          self.peek().lineno(),
+          self.cls + self.f,
+          self.parse_expression())
+    else:
+      return self.parse_expression()
+
+  def parse_value_expression(self):
+    if self.make_trace:
+      return '(push_trace("%s", %d, "%s"), pop_trace_with_value(%s))' % (
+          self.source.filespec,
+          self.peek().lineno(),
+          self.cls + self.f,
+          self.parse_expression())
+    else:
+      return self.parse_expression()
 
   def parse_expression(self):
     return self.parse_relation_expression()
@@ -469,6 +506,7 @@ class Parser(object):
   def parse_class(self):
     self.expect('class')
     name = 'CC' + self.expect('ID').value
+    self.cls = name[2:] + '::'
     bases = {'CCObject'}
     if self.consume('['):
       while not self.consume(']'):
@@ -481,9 +519,11 @@ class Parser(object):
       if self.consume('fn'):
         if self.at('ID'):
           methname = 'mm' + self.expect('ID').value
+          self.f = methname[2:]
           virt = 'virtual '
         else:
           methname = name
+          self.f = '<constructor>'
           virt = ''
         argsigs = self.parse_argsigs()
         if methname != name:
@@ -511,6 +551,7 @@ template <class... Args>
 inline P<%s> vv%s(Args&&... args) {
   return new %s(std::forward<Args>(args)...);
 }""" % (name, name[2:], name)
+    self.cls = ''
 
 def sanitize_string(s):
   return (s
@@ -523,23 +564,23 @@ def sanitize_string(s):
 # TODO: include
 rdir = os.path.dirname(os.path.realpath(__file__))
 
-def load(path, prefix):
+def load(path, prefix, make_trace):
   with open(os.path.join(prefix, path)) as f:
     data = f.read()
-  parser = Parser(Source(path, data))
+  parser = Parser(Source(path, data), make_trace)
   parser.parse()
   return parser
 
-def include(path):
+def include(path, make_trace):
   """returns a list of unique processed parsers (let's call it parsers)
   such that if parsers[i] depends on parsers[j], j < i."""
-  parsers = [load(path, '.')]
+  parsers = [load(path, '.', make_trace)]
   table = {path: parsers[0]}
   todo = set(parsers[0].includes)|{'prelude.xc'}
   while todo:
     item = todo.pop()
     if item not in table:
-      parsers.append(load(item, os.path.join(rdir, 'lib')))
+      parsers.append(load(item, os.path.join(rdir, 'lib'), make_trace))
       todo.update(parsers[-1].includes)
       table[item] = parsers[-1]
     else:
@@ -575,7 +616,7 @@ def combine(parsers):
   return ''.join((prelude, strs, fwd, decls, vardecls, defs))
 
 def main(path):
-  print(combine(include(path)))
+  print(combine(include(path, make_trace=True)))
 
 if __name__ == '__main__':
   main(sys.argv[1])

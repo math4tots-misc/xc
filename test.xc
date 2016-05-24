@@ -27,6 +27,10 @@ class Sample {
   fn mmstr[] String {
     return '<Sample>'
   }
+
+  fn die[] Void {
+    err['requested death']
+  }
 }
 
 var x Int = 5
@@ -38,6 +42,10 @@ fn outer[] {
   var s = Sample[]
   # print[s.method[]]
   print['end outer']
+}
+
+fn have_an_err[] {
+  Sample[].die[]
 }
 
 fn main[] {
@@ -75,5 +83,6 @@ fn main[] {
   {
     var x Any = 5
     print[x as Int]
+    have_an_err[]
   }
 }

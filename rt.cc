@@ -13,14 +13,54 @@
 #include <set>
 #include <algorithm>
 #include <tuple>
+#include <exception>
+#include <stdexcept>
 
-//-- Part 1: defines
+//-- Section 00: defines
 #define vvnil nullptr
 #define vvself this
 #define vvtrue true
 #define vvfalse false
 
-//-- Part 2: P
+// Standard Xcode tools do not seem to support thread_local yet.
+// THREAD_LOCAL is used to keep a manual stack trace.
+// So as long as there is there's no multithreading in the program,
+// things should still run ok.
+#define THREAD_LOCAL
+
+//-- Section 01: Error handling/assert
+THREAD_LOCAL std::vector<std::tuple<const char*, int, const char*>> trace;
+
+inline void push_trace(const char *filespec, int lineno, const char *f) {
+  trace.push_back(std::make_tuple(filespec, lineno, f));
+}
+
+inline void pop_trace() {
+  trace.pop_back();
+}
+
+template <class T>
+inline T pop_trace_with_value(T t) {
+  pop_trace();
+  return t;
+}
+
+std::string make_trace() {
+  std::stringstream ss;
+  ss << "Traceback (most recent call last):" << std::endl;
+  for (auto& triple: trace) {
+    ss << "  File \"" << std::get<0>(triple)
+       << "\", line " << std::get<1>(triple)
+       << ", in " << std::get<2>(triple) << std::endl;
+  }
+  return ss.str();
+}
+
+[[noreturn]] void err(const std::string& message) {
+  throw std::runtime_error(make_trace() + message + "\n");
+}
+
+//-- Section 02: P
 class CCObject;
 template <class T>
 class P {
@@ -53,7 +93,7 @@ private:
   T* ptr;
 };
 
-//-- Part 3: CCObject
+//-- Section 03: CCObject
 class CCObject {
 public:
   constexpr CCObject(): refcnt(0) {}
@@ -65,7 +105,7 @@ private:
   template <class T> friend class P;
 };
 
-//-- Part 4: Primitive type aliases
+//-- Section 04: Primitive type aliases
 typedef void PPVoid;
 typedef bool PPBool;
 typedef char PPChar;
@@ -74,7 +114,7 @@ typedef double PPFloat;
 template <class... T> using PPTuple = std::tuple<T...>;
 template <class R, class... A> using PPFunction = std::function<R(A...)>;
 
-//-- Part 5: Tupleobject
+//-- Section 05: Tupleobject
 template <class... T>
 class CCTupleObject final: public CCObject {
 public:
@@ -89,7 +129,7 @@ PPTuple<A...> vvT(A... args) {
   return PPTuple<A...>(args...);
 }
 
-//-- Part 6: Any
+//-- Section 06: Any
 class PPAny final {
 public:
   static constexpr int POINTER = 0;
@@ -122,25 +162,25 @@ public:
   }
   PPBool as_bool() const {
     if (type != BOOL) {
-      throw "Not an bool";  // TODO: Better error handling
+      err("Not a bool");
     }
     return boolean;
   }
   PPChar as_char() const {
     if (type != CHAR) {
-      throw "Not an char";  // TODO: Better error handling
+      err("Not a char");
     }
     return character;
   }
   PPInt as_int() const {
     if (type != INT) {
-      throw "Not an int";  // TODO: Better error handling
+      err("Not an int");
     }
     return integer;
   }
   PPFloat as_float() const {
     if (type != FLOAT) {
-      throw "Not an float";  // TODO: Better error handling
+      err("Not a float");
     }
     return floating;
   }
@@ -155,13 +195,13 @@ private:
   };
 };
 
-//-- Part 7: String
+//-- Section 07: String
 class CCString;
 typedef P<CCString> PPString;
 class CCString final: public CCObject {
 public:
   CCString(const std::string& v): s(v) {}
-  const std::string str() const { return s; }
+  const std::string& str() const { return s; }
   PPInt mmsize() const { return s.size(); }
   PPChar mmmmdiv(PPInt i) const { return s[i]; }
   auto mmmmbegin() { return s.begin(); }
@@ -169,8 +209,11 @@ public:
 private:
   const std::string s;
 };
+[[noreturn]] void vverr(PPString message) {
+  err(message->str());
+}
 
-//-- Part 8: repr
+//-- Section 08: repr
 template <class T>
 std::string repr(T t) {
   std::stringstream ss;
@@ -210,7 +253,7 @@ PPString vvrepr(T t) {
   return new CCString(repr(t));
 }
 
-//-- Part 9: Vector
+//-- Section 09: Containers: Vector/Deque/Map/Set
 template <class T> class CCVector;
 template <class T> using PPVector = P<CCVector<T>>;
 template <class T>
@@ -246,7 +289,7 @@ PPVector<T> make_vector(std::initializer_list<T> args) {
   return new CCVector<T>(args);
 }
 
-//-- Part 10: stream out overloads/str.
+//-- Section 10: stream out overloads/str.
 template <class Tuple, int I>
 struct TupleWriteHelper {
   static void write(std::ostream& out, const Tuple& t) {
@@ -286,7 +329,7 @@ PPString vvstr(T t) {
   return new CCString(t);
 }
 
-//-- Part 11: FileWriter/FileReader and input/print
+//-- Section 11: FileWriter/FileReader and input/print
 class CCFileWriter final: public CCObject {
 public:
   CCFileWriter(const std::string& filename):
@@ -295,18 +338,8 @@ public:
   ~CCFileWriter() { if (destroy) { delete out; } }
   CCFileWriter(const CCFileWriter& w) = delete;
   CCFileWriter& operator=(const CCFileWriter& w) = delete;
-
-  template <class T>
-  void mmwrite(T t) {
-    (*out) << t;
-  }
-
-  template <class T>
-  void mmprint(T t) {
-    mmwrite(t);
-    (*out) << std::endl;
-  }
-
+  template <class T> void mmwrite(T t) { (*out) << t; }
+  template <class T> void mmprint(T t) { mmwrite(t); (*out) << std::endl; }
 private:
   const bool destroy;  // indicates whether we should destory the ostream.
   std::ostream* out;
@@ -316,18 +349,21 @@ PPFileWriter vvstdout(new CCFileWriter());
 inline PPFileWriter vvFileWriter(PPString filename) {
   return new CCFileWriter(filename->str());
 }
-
 class CCFileReader final: public CCObject {
 public:
   CCFileReader(const std::string& filename):
     destroy(true), fin(new std::ifstream(filename)) {}
   CCFileReader(): destroy(false), fin(&std::cin) {}
   ~CCFileReader() { if (destroy) { delete fin; } }
-
   PPString mminput() {
     std::string s;
     std::getline(*fin, s);
     return new CCString(s);
+  }
+  PPString mmread() {
+    return new CCString(std::string(
+        (std::istreambuf_iterator<char>(*fin)),
+        (std::istreambuf_iterator<char>())));
   }
 private:
   const bool destroy;  // indicates whether we should destroy the istream.
@@ -342,7 +378,7 @@ inline PPFileReader vvFileReader(PPString filename) {
 template <class T> void vvprint(const T& t) { vvstdout->mmprint(t); }
 PPString vvinput() { return vvstdin->mminput(); }
 
-//-- Part 12: ARGS and main.
+//-- Section 12: ARGS and main.
 PPVector<PPString> vvARGS(new CCVector<PPString>({}));
 
 void vvmain();
@@ -351,7 +387,11 @@ int main(int argc, char **argv) {
   for (int i = 0; i < argc; i++) {
     vvARGS->mmpush(new CCString(argv[i]));
   }
-  vvmain();
+  try {
+    vvmain();
+  } catch (const std::runtime_error& err) {
+    std::cerr << err.what();
+  }
 }
 
 ////// END prelude
