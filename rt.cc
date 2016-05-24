@@ -154,6 +154,41 @@ private:
   const std::string s;
 };
 
+// repr
+template <class T>
+std::string repr(T t) {
+  std::stringstream ss;
+  ss << t;
+  return ss.str();
+}
+
+inline std::string sanitize_char(char c) {
+  switch (c) {
+  case '\n': return "\\n";
+  case '\t': return "\\t";
+  case '"': return "\\\"";
+  case '\'': return "\\'";
+  default: return std::string(1, c);
+  }
+}
+
+template <>
+std::string repr<PPString>(PPString pps) {
+  const std::string& s = pps->str();
+  std::stringstream ss;
+  ss << '"';
+  for (int i = 0; i < s.size(); i++) {
+    ss << sanitize_char(s[i]);
+  }
+  ss << '"';
+  return ss.str();
+}
+
+template <>
+std::string repr<PPChar>(PPChar ppc) {
+  return "'" + sanitize_char(ppc) + "'";
+}
+
 template <class T> class CCVector;
 template <class T> using PPVector = P<CCVector<T>>;
 
@@ -175,7 +210,7 @@ public:
       if (!first) {
         ss << ", ";
       }
-      ss << i;
+      ss << repr(i);
       first = false;
     }
     ss << "]";
@@ -191,11 +226,16 @@ PPVector<T> V(std::initializer_list<T> args) {
   return new CCVector<T>(args);
 }
 
+template <class T>
+PPString vvrepr(T t) {
+  return new CCString(repr(t));
+}
+
 // Tuple out stream
 template <class Tuple, int I>
 struct TupleWriteHelper {
   static void write(std::ostream& out, const Tuple& t) {
-    out << std::get<std::tuple_size<Tuple>::value-I>(t) << ", ";
+    out << repr(std::get<std::tuple_size<Tuple>::value-I>(t)) << ", ";
     TupleWriteHelper<Tuple, I-1>::write(out, t);
   }
 };
@@ -203,7 +243,7 @@ struct TupleWriteHelper {
 template <class Tuple>
 struct TupleWriteHelper<Tuple, 1> {
   static void write(std::ostream& out, const Tuple& t) {
-    out << std::get<std::tuple_size<Tuple>::value-1>(t);
+    out << repr(std::get<std::tuple_size<Tuple>::value-1>(t));
   }
 };
 
