@@ -109,16 +109,16 @@ whitespace_pattern = compile_re(r'(?:\s|#.*?$)*')
 err_pattern = compile_re(r'\S+')
 token_table = tuple((type_, compile_re(pattern)) for type_, pattern in
     [
-      ('STR', r'"""(?:\\|(?!\"\"\").)*"""'),
-      ('STR', r"'''(?:\\|(?!\'\'\').)*'''"),
-      ('STR', r'"(?:\\|(?!\").)*"'),
-      ('STR', r"'(?:\\|(?!\').)*'"),
+      ('STR', r'"""(?:\\.|(?!\"\"\").)*"""'),
+      ('STR', r"'''(?:\\.|(?!\'\'\').)*'''"),
+      ('STR', r'"(?:\\.|(?!\").)*"'),
+      ('STR', r"'(?:\\.|(?!\').)*'"),
       ('STR', r'r""".*?"""'),
       ('STR', r"r'''.*?'''"),
       ('STR', r'r".*?"'),
       ('STR', r"r'.*?'"),
-      ('CHR', r'c"(?:\\|(?!\").)*"'),
-      ('CHR', r"c'(?:\\|(?!\').)*'"),
+      ('CHR', r'c"(?:\\.|(?!\").)*"'),
+      ('CHR', r"c'(?:\\.|(?!\').)*'"),
       ('FLT', r'\d+\.\d*'),
       ('FLT', r'\d*\.\d+'),
       ('INT', r'\d+'),
@@ -251,6 +251,8 @@ class Parser(object):
         if type_ != 'auto':
           self.decls += '\nextern %s %s;' % (type_, name)
         self.vardecls += '\n%s %s%s;' % (type_, name, value)
+      elif self.consume('STR'):
+        pass  # Comments
       else:
         raise Err('Top level, found %r' % (
             type_, self.peek()))
@@ -334,6 +336,8 @@ class Parser(object):
           assigns.append('\nauto vv%s = std::get<%d>(%s);' % (
               name, i, tmpvar))
       return '\nauto %s = %s;%s' % (tmpvar, tupleexpr, ''.join(assigns))
+    elif self.consume('STR'):
+      return ''  # comments
     else:
       return '\n%s;' % self.parse_void_expression()
 
@@ -474,7 +478,7 @@ class Parser(object):
     return '%s%s%s' % (outs[0], ', '.join(args), outs[1])
 
   def parse_primary_expression(self):
-    if self.at('('):
+    if self.consume('('):
       e = self.parse_expression()
       self.expect(')')
       return e
@@ -502,7 +506,7 @@ class Parser(object):
     elif self.at('FLT'):
       return self.expect('FLT').value
     elif self.at('STR'):
-      return register_string(sanitize_string(eval(self.expect('STR').value)))
+      return register_string(eval(self.expect('STR').value))
     elif self.at('CHR'):
       return "'%s'" % sanitize_string(eval(self.expect('CHR').value[1:]))
     elif self.consume('$'):
@@ -548,7 +552,7 @@ class Parser(object):
           virt = ''
         argsigs = self.parse_argsigs()
         if methname != name:
-          rettype = 'auto '
+          rettype = 'PPVoid '
           if self.at('ID'):
             rettype = self.parse_type() + ' '
         else:
@@ -561,6 +565,8 @@ class Parser(object):
         attrname = 'aa' + self.expect('ID').value
         type_ = self.parse_type()
         decl += '\n  %s %s;' % (type_, attrname)
+      elif self.consume('STR'):
+        pass  # comments
       else:
         raise Err('class def', self.peek())
     decl += '\n};'
@@ -576,6 +582,7 @@ inline P<%s> vv%s(Args&&... args) {
 
 def sanitize_string(s):
   return (s
+      .replace('\\', '\\\\')
       .replace('\n', '\\n')
       .replace('\t', '\\t')
       .replace('"', '\\"')

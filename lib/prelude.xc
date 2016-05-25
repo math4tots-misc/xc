@@ -43,6 +43,10 @@ class IntegerIterator {
   }
 }
 
+fn range[end Int] Range {
+  return range[0, end]
+}
+
 fn range[begin Int, end Int] Range {
   return range[begin, end, 1]
 }

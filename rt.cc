@@ -201,16 +201,39 @@ typedef P<CCString> PPString;
 class CCString final: public CCObject {
 public:
   CCString(const std::string& v): s(v) {}
+  CCString(char c): s(1, c) {}
   const std::string& str() const { return s; }
   PPInt mmsize() const { return s.size(); }
   PPChar mmmmdiv(PPInt i) const { return s[i]; }
   auto mmmmbegin() { return s.begin(); }
   auto mmmmend() { return s.end(); }
+  bool mmmmeq(const PPString& ps) const {
+    return s == ps->s;
+  }
+  PPString mmmmadd(const PPString& ps) const {
+    return new CCString(s + ps->s);
+  }
 private:
   const std::string s;
 };
+PPString vvtrace() {
+  return new CCString(make_trace());
+}
 [[noreturn]] void vverr(PPString message) {
   err(message->str());
+}
+void vvassert(PPBool cond) {
+  if (!cond) {
+    err("Assertion Err");
+  }
+}
+template <class T>
+void vvassert(PPBool cond, T t) {
+  if (!cond) {
+    std::stringstream ss;
+    ss << "Assertion Err: " << t;
+    err(ss.str());
+  }
 }
 
 //-- Section 08: repr
@@ -280,6 +303,12 @@ public:
     ss << "]";
     return new CCString(ss.str());
   }
+  bool mmmmeq(const PPVector<T>& pv) const { return v == pv->v; }
+  bool mmmmne(const PPVector<T>& pv) const { return v != pv->v; }
+  bool mmmmlt(const PPVector<T>& pv) const { return v <  pv->v; }
+  bool mmmmle(const PPVector<T>& pv) const { return v <= pv->v; }
+  bool mmmmgt(const PPVector<T>& pv) const { return v >  pv->v; }
+  bool mmmmge(const PPVector<T>& pv) const { return v >= pv->v; }
 private:
   std::vector<T> v;
 };

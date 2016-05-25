@@ -1,93 +1,53 @@
-fn g[i Int] Int {
-  return f[i - 1]
-}
+"""Top level comments
+Simple sanity check to see everything is working.
+"""
 
-fn f[i Int] Int {
-  if i == 1 {
-    return g[i]
-  } else {
-    return i
+class Example {
+  "Class body comments"
+
+  fn tr[] String {
+    return trace[]
   }
 }
 
-fn h[] {
-  print['hi!']
-}
-
-class Sample {
-
-  fn[] {
-    print['Inside Sample constructor!']
-  }
-
-  fn method[] Int {
-    return 5
-  }
-
-  fn mmstr[] String {
-    return '<Sample>'
-  }
-
-  fn die[] Void {
-    err['requested death']
-  }
-}
-
-var x Int = 5
-
-fn outer[] {
-  print["hello\nworld"]
-  var i = 5532
-  print[i]
-  var s = Sample[]
-  # print[s.method[]]
-  print['end outer']
-}
-
-fn have_an_err[] {
-  Sample[].die[]
+fn calltr[s Example] String {
+  return s.tr[]
 }
 
 fn main[] {
-  outer[]
-  print['end main']
-  h[]
-  print[x]
-  x += 1
-  print[x]
-  for i in range[10, 20] {
-    print[i]
-  }
+  "Function body comments"
 
-  for i in $[5, 7, 22] {
-    print[i]
-  }
-
-  var t = T[57, "hi", Sample[]]
-  print[t]
-
-  print[$[1, 2, 3, 77]]
-
-  print[ARGS]
-
-  stdout.write['hello world!\n']
-  #var line = stdin.input[]
-  #print[line]
-
-  # var fw = FileWriter['blarg.txt']
-  # fw.write['hi\n']
-
-  var fin = FileReader['blarg.txt']
-  print[fin.input[]]
-
+  var tr = calltr[Example[]]
+  var m = """Traceback (most recent call last):
+  File "test.xc", line 20, in main
+  File "test.xc", line 14, in calltr
+  File "test.xc", line 9, in Example::tr
+"""
+  assert[tr == m, tr]
+  assert['hi' == 'hi', 'foobar']
+  assert['"' == "\""]
   {
-    var x Any = 5
-    print[x as Int]
-
-    let a, b = T[173, 'hi foobar']
-    print[a]
-    print[b]
-
-    have_an_err[]
+    var xs = $Int[]
+    for i in $[4, 5, 6, 7] {
+      xs.push[i]
+    }
+    assert[xs == $[4, 5, 6, 7], xs]
+    assert[xs != $[4, 5, 6, 8], xs]
+    assert[xs != $[56], xs]
+    assert[$[5, 6] < $[5, 7]]
   }
+  {
+    var xs = $Int[]
+    for i in range[3, 7] {
+      xs.push[i]
+    }
+    assert[xs == $[3, 4, 5, 6], xs]
+  }
+  {
+    let a, b = T[173, 'hi foobar']
+    assert[a == 173, a]
+    assert[b == 'hi foobar', b]
+  }
+  # print[ARGS]
+  print['pass']
 }
