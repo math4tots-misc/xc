@@ -105,6 +105,12 @@ private:
   template <class T> friend class P;
 };
 
+class CCEquatable: public virtual CCObject {
+public:
+  virtual bool mmmmeq(P<CCEquatable> pe)=0;
+};
+typedef P<CCEquatable> PPEquatable;
+
 //-- Section 04: Primitive type aliases
 typedef void PPVoid;
 typedef bool PPBool;
