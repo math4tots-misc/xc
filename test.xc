@@ -24,8 +24,12 @@ fn main[] {
   File "test.xc", line 9, in Example::tr
 """
   assert[tr == m, tr]
+
+  ## string literals test
   assert['hi' == 'hi', 'foobar']
   assert['"' == "\""]
+
+  ## simple vector operations test
   {
     var xs = $Int[]
     for i in $[4, 5, 6, 7] {
@@ -36,6 +40,8 @@ fn main[] {
     assert[xs != $[56], xs]
     assert[$[5, 6] < $[5, 7]]
   }
+
+  ## range test
   {
     var xs = $Int[]
     for i in range[3, 7] {
@@ -43,11 +49,14 @@ fn main[] {
     }
     assert[xs == $[3, 4, 5, 6], xs]
   }
+
+  ## tuple test
   {
     let a, b = T[173, 'hi foobar']
     assert[a == 173, a]
     assert[b == 'hi foobar', b]
   }
+
   # print[ARGS]
   print['pass']
 }
