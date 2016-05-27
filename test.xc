@@ -29,6 +29,19 @@ fn main[] {
   assert['hi' == 'hi', 'foobar']
   assert['"' == "\""]
 
+  ## 'if' statements
+  {
+    var x = false
+    if true {
+      x = true
+    }
+    assert[x]
+    if false {
+      x = false
+    }
+    assert[x]
+  }
+
   ## simple vector operations test
   {
     var xs = $Int[]
