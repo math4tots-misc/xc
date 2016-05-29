@@ -18,7 +18,6 @@ fi
 python "$DIR"/process.py "$1" > "$DIR"/a.cc && \
 g++ -std=c++14 \
     -Wall -Werror -Wpedantic \
-    -Wno-parentheses-equality \
     "$DIR"/a.cc -o "$DIR"/a.out \
     "${@:2:$((SPLIT - 2))}" && \
 "$DIR"/a.out "${@:$((SPLIT + 1))}" <&0
