@@ -358,22 +358,24 @@ class Parser(object):
         other = '\nelse' + self.parse_block()
     return '\nif (%s)%s%s' % (cond, body, other)
 
+  def generate_push_stub(self):
+    return 'push_trace("%s", %d, "%s")' % (
+        sanitize_string(self.source.filespec),
+        self.peek().lineno(),
+        self.cls + self.f)
+
   def parse_void_expression(self):
     if self.make_trace:
-      return 'push_trace("%s", %d, "%s"), %s, pop_trace()' % (
-          self.source.filespec,
-          self.peek().lineno(),
-          self.cls + self.f,
+      return '%s, %s, pop_trace()' % (
+          self.generate_push_stub(),
           self.parse_expression())
     else:
       return self.parse_expression()
 
   def parse_value_expression(self):
     if self.make_trace:
-      return '(push_trace("%s", %d, "%s"), pop_trace_with_value(%s))' % (
-          self.source.filespec,
-          self.peek().lineno(),
-          self.cls + self.f,
+      return '(%s, pop_trace_with_value(%s))' % (
+          self.generate_push_stub(),
           self.parse_expression())
     else:
       return self.parse_expression()
@@ -648,4 +650,3 @@ def main(path):
 
 if __name__ == '__main__':
   main(sys.argv[1])
-
