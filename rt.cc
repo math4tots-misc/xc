@@ -265,7 +265,7 @@ std::string repr<PPString>(PPString pps) {
   const std::string& s = pps->str();
   std::stringstream ss;
   ss << '"';
-  for (int i = 0; i < s.size(); i++) {
+  for (unsigned i = 0; i < s.size(); i++) {
     ss << sanitize_char(s[i]);
   }
   ss << '"';
